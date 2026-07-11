@@ -2,12 +2,41 @@
 
 - ``BULK_*`` : Bulk Operations 用。ページング引数を持たず、connection は edges/node で記述。
   制約: connection 最大5・ネスト最大2階層・ノードは Node(id を持つ)必須。
+  トップレベル connection には ``%(f)s`` プレースホルダを置き、差分取得時は
+  ``build`` / ``date_filter`` で ``(query: "updated_at:>=...")`` を注入する
+  (バックフィル時は空文字 → 全件エクスポート)。
 - ``*_PAGINATED`` : 通常のカーソルページング用 (``first/after/query`` の3変数)。
   Bulk に載せにくい/件数の少ないソース向け。
 
 分析に有用なソースは、dlt 標準が非対応でもここでカスタム取得する
 (discounts / collections / abandoned_checkouts / locations)。
 """
+
+from __future__ import annotations
+
+import json
+
+
+def date_filter(field: str, low: str | None = None, high: str | None = None) -> str:
+    """Shopify 検索構文の ``(query: "...")`` 節を組み立てる。
+
+    ``field`` は ``updated_at`` / ``created_at`` などの検索フィールド。境界は両端含む
+    (``>=`` / ``<=``)。低境界・高境界がいずれも無ければ空文字を返し、全件取得となる。
+    """
+    parts = []
+    if low:
+        parts.append(f"{field}:>='{low}'")
+    if high:
+        parts.append(f"{field}:<='{high}'")
+    if not parts:
+        return ""
+    return f"(query: {json.dumps(' AND '.join(parts))})"
+
+
+def build(template: str, filter_clause: str = "") -> str:
+    """``BULK_*`` テンプレートの ``%(f)s`` へ connection 引数節を差し込む。"""
+    return template % {"f": filter_clause}
+
 
 # =========================================================================
 # Bulk Operations 用クエリ
@@ -16,7 +45,7 @@
 # --- 注文 (orders → line_items) ------------------------------------------
 BULK_ORDERS = """
 {
-  orders {
+  orders%(f)s {
     edges { node {
       id
       legacyResourceId
@@ -67,7 +96,7 @@ BULK_ORDERS = """
 # --- 商品 (products → variants) ------------------------------------------
 BULK_PRODUCTS = """
 {
-  products {
+  products%(f)s {
     edges { node {
       id
       legacyResourceId
@@ -110,7 +139,7 @@ BULK_PRODUCTS = """
 # email / emailMarketingConsent は非推奨のため defaultEmailAddress を使用。
 BULK_CUSTOMERS = """
 {
-  customers {
+  customers%(f)s {
     edges { node {
       id
       legacyResourceId
@@ -138,7 +167,7 @@ BULK_CUSTOMERS = """
 # --- コレクション (collections → products membership) --------------------
 BULK_COLLECTIONS = """
 {
-  collections {
+  collections%(f)s {
     edges { node {
       id
       title
@@ -158,7 +187,7 @@ BULK_COLLECTIONS = """
 # ファネル/離脱分析用。dlt 標準非対応のためカスタム取得。
 BULK_ABANDONED_CHECKOUTS = """
 {
-  abandonedCheckouts {
+  abandonedCheckouts%(f)s {
     edges { node {
       id
       createdAt

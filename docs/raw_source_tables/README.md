@@ -20,6 +20,28 @@ dlt が Shopify Admin GraphQL API から投入する生データ。列名 snake_
 | discounts__codes | ページング (子) | discounts | [discounts__codes.md](discounts__codes.md) |
 | locations | ページング | — | [locations.md](locations.md) |
 
+## 取得モードと書き込み方式
+
+運用は2モードを前提とする (詳細は [`../../dataload/README.md`](../../dataload/README.md))。
+
+- **差分取得 (既定)**: 日次/毎時のスケジュール実行。前回の高水位 (`updated_at`、
+  放棄チェックアウトは `created_at`) 以降だけを Shopify 側フィルタで絞って取得する。
+  **Bulk も差分**で、connection に `(query: "updated_at:>=...")` を注入する。
+  初回は高水位が無いため全件取得 (= 初回バックフィル) になる。
+- **バックフィル (手動・随時)**: 過去分をまとめて取り直すとき。保存済み高水位を無視して
+  全期間または期間指定で再取得する。
+
+書き込み方式はテーブルごとに次のとおり。
+
+| 取得方式 | 対象 | 書き込み | 主キー |
+|---|---|---|---|
+| Bulk | orders / products / customers / collections / abandoned_checkouts と各子テーブル | `merge` (差分 upsert) | `id` |
+| ページング | discounts / locations | `replace` (毎回全件洗い替え) | `id` |
+
+> discounts / locations は件数が少なく変動も小さいため差分に載せず、毎回 `replace` する。
+> `merge` は差分 upsert のため、親から取り除かれた子行 (削除された注文明細、コレクション
+> 非所属化など) は残る。厳密に整合させたいときは全期間バックフィルで取り直す。
+
 ## 結合キーの規則
 
 - **Bulk の子テーブル**: `parent_id` (親の gid) = 親テーブルの `id`。

@@ -4,14 +4,35 @@ Shopify 開発ストアの Admin GraphQL API からデータを抽出し、DuckD
 
 分析に有用なソースは、dlt 標準ソースが非対応でも discounts と同様にカスタム取得する。
 
+## 取得モード
+
+運用は2モードを前提とする。
+
+- **差分取得 (既定)** — 日次/毎時のスケジュール実行向け。前回実行で記録した高水位
+  (`updated_at` / 放棄チェックアウトは `created_at`) 以降だけを Shopify 側の検索フィルタで
+  絞って取得し、`merge` で upsert する。**Bulk も差分**で、connection に
+  `(query: "updated_at:>=...")` を注入して更新分だけをエクスポートする。
+  初回実行は高水位が無いため自動的に全件取得 (= 初回バックフィル) になる。
+- **バックフィル (手動・随時)** — 過去分をまとめて取り直すとき。保存済み高水位を無視して
+  全期間、または `--start` / `--end` の期間を再取得する。高水位は前進のみ
+  (過去窓の再取得で巻き戻さない)。
+
+大きく変動しない小さなディメンション (discounts / locations) は差分に載せず、毎回
+`replace` で全件洗い替えする (件数が少なく安全側)。
+
 ## 取得方式
 
-- **Bulk Operations** (`shopify_source/bulk.py`): 大きくネストするソースを1クエリで全件エクスポート。
+- **Bulk Operations** (`shopify_source/bulk.py`): 大きくネストするソースを1クエリでエクスポート。
   結果 JSONL の各ノードを gid の型で判定し、型ごとの raw テーブルへ振り分ける。
   子ノードは `__parentId` → `parent_id` として親の gid を保持する (join キー)。
+  差分時はトップレベル connection に `(query: ...)` を注入し更新分のみをエクスポートする。
 - **通常ページング** (`shopify_source/helpers.py`): 件数の少ない/Bulk に載せにくいソース向け。
 
-いずれも `write_disposition="replace"` の全件洗い替え (Bulk は全件エクスポートのため)。
+Bulk 系リソースは `write_disposition="merge"` (primary_key=`id`) で upsert、
+小さなディメンションは `replace` で全件洗い替え。
+
+> merge は差分 upsert のため、親から取り除かれた子行 (削除された注文明細やコレクション
+> 非所属化) は残る。厳密に整合させたいときは `--backfill` で全期間を取り直す。
 
 ## 取得対象リソース
 
@@ -52,12 +73,22 @@ Dev Dashboard アプリの **Client ID / Secret** を設定すると、実行時
 ## 実行
 
 ```powershell
+# 差分取得 (既定・日次/毎時のスケジュール実行向け)
 uv run python shopify_pipeline.py
+
+# 全期間バックフィル (手動・随時)
+uv run python shopify_pipeline.py --backfill
+
+# 期間指定バックフィル (手動・随時)
+uv run python shopify_pipeline.py --start 2025-01-01 --end 2025-03-31
 ```
 
 - 出力先 DuckDB: `shopify.duckdb` (環境変数 `SHOPIFY_DUCKDB_PATH` で変更可)
 - スキーマ: `raw`
-- 2回目以降は `updatedAt` の前回値以降のみ取得する増分ロード
+- 既定は差分取得。前回の高水位以降のみを Bulk 側フィルタで絞って取得し `merge` する
+  (初回は高水位が無いため全件取得 = 初回バックフィル)。
+- 高水位は dlt のパイプライン状態に保存される。別ファイルに出力するときや状態を
+  リセットしたいときは `--backfill` で取り直す。
 
 ## 出力の確認
 

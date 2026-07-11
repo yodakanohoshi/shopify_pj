@@ -1,8 +1,18 @@
 """Shopify → DuckDB (raw) ロードのエントリポイント。
 
-使い方::
+想定運用は2モード:
 
+    # 差分取得 (既定・日次/毎時のスケジュール実行向け)
     uv run python shopify_pipeline.py
+
+    # 全期間バックフィル (手動・随時)
+    uv run python shopify_pipeline.py --backfill
+
+    # 期間指定バックフィル (手動・随時)
+    uv run python shopify_pipeline.py --start 2025-01-01 --end 2025-03-31
+
+差分取得は前回実行で記録した高水位以降だけを Bulk 側フィルタで絞って取得し merge する
+(初回は高水位が無いため全件 = 初回バックフィル)。
 
 認証情報は ``.dlt/secrets.toml`` もしくは環境変数で与える。
 ``.env`` があれば読み込み、``SHOPIFY_*`` を dlt が解釈する形へブリッジする。
@@ -10,6 +20,7 @@
 
 from __future__ import annotations
 
+import argparse
 import os
 
 import dlt
@@ -37,7 +48,27 @@ def _bridge_env() -> None:
             os.environ[dst] = os.environ[src]
 
 
-def run() -> None:
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Shopify → DuckDB (raw) ロード")
+    parser.add_argument(
+        "--backfill",
+        action="store_true",
+        help="保存済み高水位を無視して全期間を再取得する (手動バックフィル)",
+    )
+    parser.add_argument(
+        "--start",
+        metavar="ISO_DATE",
+        help="バックフィルの下限 (例 2025-01-01)。指定するとバックフィル扱い",
+    )
+    parser.add_argument(
+        "--end",
+        metavar="ISO_DATE",
+        help="バックフィルの上限 (例 2025-03-31)",
+    )
+    return parser.parse_args()
+
+
+def run(backfill: bool = False, start_date: str | None = None, end_date: str | None = None) -> None:
     _bridge_env()
 
     pipeline = dlt.pipeline(
@@ -47,9 +78,12 @@ def run() -> None:
         progress="log",
     )
 
-    load_info = pipeline.run(shopify_source())
+    load_info = pipeline.run(
+        shopify_source(start_date=start_date, end_date=end_date, backfill=backfill)
+    )
     print(load_info)
 
 
 if __name__ == "__main__":
-    run()
+    args = _parse_args()
+    run(backfill=args.backfill, start_date=args.start, end_date=args.end)
