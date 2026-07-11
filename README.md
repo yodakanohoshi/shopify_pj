@@ -18,10 +18,16 @@ Shopify Admin GraphQL API
 
 | ディレクトリ | 役割 | スタック |
 |---|---|---|
-| [`shopifystore/`](shopifystore/) | 開発ストアの構築手順 + 初期データ投入 (商品/顧客/**割引**/注文) | Shopify Partner / Admin API / Python |
-| [`dataload/`](dataload/) | データロード (source → raw)。割引など dlt 標準非対応リソースも取得 | dlt / DuckDB |
+| [`shopifystore/`](shopifystore/) | 開発ストアの構築手順 (初心者向け [docs/](shopifystore/docs/)) + 初期データ投入 | Shopify Partner / Admin API / Python |
+| [`dataload/`](dataload/) | データロード (source → raw)。Bulk Operations + 割引等のカスタム取得 | dlt / DuckDB |
 | [`elt/`](elt/) | データ変換 (raw → stg → intermediate → marts) | dbt-duckdb |
-| [`docs/`](docs/) | 全レイヤのテーブル定義書 | Markdown |
+| [`docs/`](docs/) | 全レイヤのテーブル定義書 (レイヤ別ディレクトリ・1テーブル1ファイル) | Markdown |
+
+## 取得している分析ソース
+
+注文 / 商品 (原価) / 顧客 (配信同意) / コレクション / 放棄チェックアウト / 割引 / ロケーション。
+分析に有用なソースは dlt 標準非対応でも割引と同じ要領でカスタム取得している。
+大きくネストするソースは **Bulk Operations** で全件エクスポートし、型ごとの raw テーブルへ振り分ける。
 
 DuckDB ファイル (`dataload/shopify.duckdb`) を dlt と dbt で共有する。
 
