@@ -128,11 +128,51 @@ mutation draftOrderComplete($id: ID!) {
 
 
 # --- seed 各カテゴリ ------------------------------------------------------
+# --- 冪等化ヘルパー (再実行で既存レコードを再利用/スキップ) ---------------
+Q_FIND_PRODUCT = """
+query findProduct($q: String!) {
+  products(first: 1, query: $q) {
+    edges { node { id variants(first: 1) { edges { node { id } } } } }
+  }
+}
+"""
+
+Q_FIND_CUSTOMER = """
+query findCustomer($q: String!) {
+  customers(first: 1, query: $q) { edges { node { id } } }
+}
+"""
+
+Q_FIND_COLLECTION = """
+query findCollection($q: String!) {
+  collections(first: 1, query: $q) { edges { node { id } } }
+}
+"""
+
+
+def _first_node(api: ShopifyAdmin, query: str, query_str: str) -> dict | None:
+    """検索クエリの最初のノードを返す (無ければ None)。"""
+    data = api.execute(query, {"q": query_str})
+    edges = next(iter(data.values()))["edges"]
+    return edges[0]["node"] if edges else None
+
+
+def _is_duplicate(err: Exception) -> bool:
+    m = str(err).lower()
+    return "taken" in m or "already" in m or "exists" in m
+
+
 def seed_products(api: ShopifyAdmin) -> tuple[list[str], list[str]]:
-    """商品を作成し価格と原価を設定。(product_ids, variant_ids) を返す。"""
+    """商品を作成し価格と原価を設定。既存 (同名) は再利用。(product_ids, variant_ids) を返す。"""
     product_ids: list[str] = []
     variant_ids: list[str] = []
     for title, ptype, vendor, price, cost, _inventory in data.PRODUCTS:
+        existing = _first_node(api, Q_FIND_PRODUCT, f'title:"{title}"')
+        if existing:
+            product_ids.append(existing["id"])
+            variant_ids.append(existing["variants"]["edges"][0]["node"]["id"])
+            print(f"  product: {title} (既存を再利用)")
+            continue
         payload = api.mutate(
             M_PRODUCT_CREATE,
             {"input": {"title": title, "productType": ptype, "vendor": vendor, "status": "ACTIVE"}},
@@ -158,6 +198,11 @@ def seed_products(api: ShopifyAdmin) -> tuple[list[str], list[str]]:
 def seed_customers(api: ShopifyAdmin) -> list[str]:
     customer_ids: list[str] = []
     for first, last, email, country, subscribed in data.CUSTOMERS:
+        existing = _first_node(api, Q_FIND_CUSTOMER, f"email:{email}")
+        if existing:
+            customer_ids.append(existing["id"])
+            print(f"  customer: <{email}> (既存を再利用)")
+            continue
         payload = api.mutate(
             M_CUSTOMER_CREATE,
             {"input": {"firstName": first, "lastName": last, "email": email,
@@ -183,9 +228,15 @@ def seed_collections(api: ShopifyAdmin, product_ids: list[str]) -> None:
         print("  [skip] collections には products の投入が必要です")
         return
     for title, product_idxs in data.COLLECTIONS:
-        created = api.mutate(M_COLLECTION_CREATE, {"input": {"title": title}}, "collectionCreate")
-        cid = created["collection"]["id"]
+        existing = _first_node(api, Q_FIND_COLLECTION, f'title:"{title}"')
+        if existing:
+            cid = existing["id"]
+        else:
+            cid = api.mutate(
+                M_COLLECTION_CREATE, {"input": {"title": title}}, "collectionCreate"
+            )["collection"]["id"]
         ids = [product_ids[i] for i in product_idxs]
+        # 既に所属済みの商品を再追加しても no-op
         api.mutate(M_COLLECTION_ADD, {"id": cid, "productIds": ids}, "collectionAddProducts")
         print(f"  collection: {title} ({len(ids)} products)")
 
@@ -193,35 +244,41 @@ def seed_collections(api: ShopifyAdmin, product_ids: list[str]) -> None:
 def seed_discounts(api: ShopifyAdmin) -> None:
     for d in data.DISCOUNTS:
         kind = d["kind"]
-        if kind == "percentage":
-            api.mutate(M_DISCOUNT_CODE_BASIC, {"basicCodeDiscount": {
-                "title": d["title"], "code": d["code"], "startsAt": NOW_ISO,
-                "usageLimit": d.get("usage_limit"), "appliesOncePerCustomer": False,
-                "customerSelection": {"all": True},
-                "customerGets": {"value": {"percentage": d["percentage"]}, "items": {"all": True}},
-            }}, "discountCodeBasicCreate")
-        elif kind == "amount":
-            api.mutate(M_DISCOUNT_CODE_BASIC, {"basicCodeDiscount": {
-                "title": d["title"], "code": d["code"], "startsAt": NOW_ISO,
-                "usageLimit": d.get("usage_limit"), "appliesOncePerCustomer": False,
-                "customerSelection": {"all": True},
-                "customerGets": {
-                    "value": {"discountAmount": {"amount": str(d["amount"]), "appliesOnEachItem": False}},
-                    "items": {"all": True},
-                },
-            }}, "discountCodeBasicCreate")
-        elif kind == "free_shipping":
-            api.mutate(M_DISCOUNT_FREE_SHIP, {"freeShippingCodeDiscount": {
-                "title": d["title"], "code": d["code"], "startsAt": NOW_ISO,
-                "usageLimit": d.get("usage_limit"), "appliesOncePerCustomer": False,
-                "customerSelection": {"all": True}, "destination": {"all": True},
-            }}, "discountCodeFreeShippingCreate")
-        elif kind == "automatic":
-            api.mutate(M_DISCOUNT_AUTOMATIC, {"automaticBasicDiscount": {
-                "title": d["title"], "startsAt": NOW_ISO,
-                "customerGets": {"value": {"percentage": d["percentage"]}, "items": {"all": True}},
-            }}, "discountAutomaticBasicCreate")
-        print(f"  discount: {d['title']} ({kind})")
+        try:
+            if kind == "percentage":
+                api.mutate(M_DISCOUNT_CODE_BASIC, {"basicCodeDiscount": {
+                    "title": d["title"], "code": d["code"], "startsAt": NOW_ISO,
+                    "usageLimit": d.get("usage_limit"), "appliesOncePerCustomer": False,
+                    "customerSelection": {"all": True},
+                    "customerGets": {"value": {"percentage": d["percentage"]}, "items": {"all": True}},
+                }}, "discountCodeBasicCreate")
+            elif kind == "amount":
+                api.mutate(M_DISCOUNT_CODE_BASIC, {"basicCodeDiscount": {
+                    "title": d["title"], "code": d["code"], "startsAt": NOW_ISO,
+                    "usageLimit": d.get("usage_limit"), "appliesOncePerCustomer": False,
+                    "customerSelection": {"all": True},
+                    "customerGets": {
+                        "value": {"discountAmount": {"amount": str(d["amount"]), "appliesOnEachItem": False}},
+                        "items": {"all": True},
+                    },
+                }}, "discountCodeBasicCreate")
+            elif kind == "free_shipping":
+                api.mutate(M_DISCOUNT_FREE_SHIP, {"freeShippingCodeDiscount": {
+                    "title": d["title"], "code": d["code"], "startsAt": NOW_ISO,
+                    "usageLimit": d.get("usage_limit"), "appliesOncePerCustomer": False,
+                    "customerSelection": {"all": True}, "destination": {"all": True},
+                }}, "discountCodeFreeShippingCreate")
+            elif kind == "automatic":
+                api.mutate(M_DISCOUNT_AUTOMATIC, {"automaticBasicDiscount": {
+                    "title": d["title"], "startsAt": NOW_ISO,
+                    "customerGets": {"value": {"percentage": d["percentage"]}, "items": {"all": True}},
+                }}, "discountAutomaticBasicCreate")
+            print(f"  discount: {d['title']} ({kind})")
+        except UserError as e:
+            if _is_duplicate(e):
+                print(f"  discount: {d['title']} (既存のためスキップ)")
+            else:
+                raise
 
 
 def seed_orders(api: ShopifyAdmin, variant_ids: list[str], customer_ids: list[str]) -> None:
