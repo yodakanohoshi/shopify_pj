@@ -19,7 +19,7 @@
 ```powershell
 cd shopifystore\seed
 uv sync
-Copy-Item .env.example .env   # SHOPIFY_SHOP / SHOPIFY_ADMIN_TOKEN を記入
+Copy-Item .env.example .env   # SHOPIFY_SHOP / SHOPIFY_CLIENT_ID / SHOPIFY_CLIENT_SECRET を記入
 
 # 全カテゴリ投入 (products → customers → collections → discounts → orders の順)
 uv run python seed.py

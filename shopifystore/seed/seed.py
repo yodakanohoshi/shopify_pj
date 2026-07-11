@@ -5,7 +5,8 @@
     uv run python seed.py                 # 全カテゴリを順に投入
     uv run python seed.py --only products,customers,collections,discounts,orders
 
-前提: .env に SHOPIFY_SHOP / SHOPIFY_ADMIN_TOKEN を設定済み。
+前提: .env に SHOPIFY_SHOP と、認証情報 (SHOPIFY_CLIENT_ID + SHOPIFY_CLIENT_SECRET
+もしくは SHOPIFY_ADMIN_TOKEN) を設定済み。
 API バージョンは 2025-01 を想定 (GraphQL Admin API)。
 
 投入されるデータは分析基盤 (dataload/elt) の検証を意図している:

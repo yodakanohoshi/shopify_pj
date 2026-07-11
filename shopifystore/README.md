@@ -11,13 +11,16 @@
 ```
 Dev Dashboard (dev.shopify.com/dashboard)
    ├─ Stores → 開発ストア作成
-   └─ Apps   → アプリ作成 → 開発ストアにインストール → Admin API アクセストークン
-                  ├─ seed/  (このディレクトリのスクリプト) でデータ投入
-                  └─ dataload/ の dlt がこのトークンで抽出
+   └─ Apps   → アプリ作成 → スコープ設定 → 開発ストアにインストール → Client ID / Secret
+                  ├─ seed/     … Client Credentials Grant でトークン自動取得しデータ投入
+                  └─ dataload/ … 同上でトークン自動取得し抽出
 ```
 
-> 手順の詳細・スクリーンショット的な流れは初心者向けガイド
-> [`docs/02-dev-store-and-app.md`](docs/02-dev-store-and-app.md) を参照。
+> **2026年1月以降、開発は Dev Dashboard に一本化**され、ストア内カスタムアプリ (`shpat_`) は廃止。
+> Dev Dashboard アプリは固定トークンではなく **Client ID / Secret** を発行し、
+> 実行時に **Client Credentials Grant** でアクセストークン (24h) に交換する
+> （本プロジェクトのスクリプトが自動で取得・更新する）。
+> 手順の詳細は初心者向けガイド [`docs/02-dev-store-and-app.md`](docs/02-dev-store-and-app.md) を参照。
 
 ---
 
@@ -29,25 +32,24 @@ Dev Dashboard (dev.shopify.com/dashboard)
 2. **Stores** タブ → **Create store** → **Development store (Dev store)**。
 3. ストア名 = `xxxx.myshopify.com` の `xxxx`（= `SHOPIFY_SHOP`）。無料・無期限・本番販売不可。
 
-## 2. アプリと Admin API トークン（Dev Dashboard）
+## 2. アプリ作成 → Client ID / Secret 取得（Dev Dashboard）
 
-1. **Apps** タブ → **Create app** → **Create in Dev Dashboard**（API 連携/自動化向け、コード雛形なし）。
-2. アプリの **Configuration / API access** で Admin API のアクセススコープを付与:
+1. **Apps** タブ → **Create app** → **Start from Dev Dashboard** → 名前を付けて **Create**。
+2. アプリの構成で **アクセススコープ**を設定（バージョンを作成して保存）:
    - 読み取り: `read_orders`, `read_products`, `read_customers`, `read_discounts`, `read_inventory`, `read_locations`
    - シード投入も行うなら `write_products`, `write_customers`, `write_discounts`, `write_draft_orders`, `write_orders`
-3. **ステップ 1 の開発ストアにインストール**（Install / Select store）。
-4. アプリの **Client credentials / API access** に表示される **Admin API access token** を控える
-   （`X-Shopify-Access-Token` として使う値。安全に保管）。
-5. API バージョンは `2025-01` を想定（アプリ設定の API version と合わせる）。
+3. 左パネル **Home** → **Install app** → ステップ 1 の開発ストアにインストール。
+4. アプリ → **Settings** で **Client ID** と **Client secret** をコピー。
 
-> 単一ストアだけなら、ストア Admin → **Settings → Apps and sales channels → Develop apps** で作る
-> 「カスタムアプリ」の静的トークン (`shpat_...`) も従来どおり利用できる。
+この Client ID / Secret を:
+- 抽出用に `dataload/.dlt/secrets.toml`（`client_id` / `client_secret`）または `dataload/.env`
+- シード投入用に `shopifystore/seed/.env`（`SHOPIFY_CLIENT_ID` / `SHOPIFY_CLIENT_SECRET`）
 
-このトークンを:
-- 抽出用に `dataload/.dlt/secrets.toml` (または `dataload/.env`)
-- シード投入用に `shopifystore/seed/.env`
+へ設定する。スクリプトが Client Credentials Grant でアクセストークン (24h) を自動取得する。
 
-へ設定する。
+> **代替**: CI/自動化向けに、アプリ → Settings → **App Automation Token** で 1/3/6か月有効の
+> 固定トークンを発行し、`SHOPIFY_ADMIN_TOKEN`（seed）/ `access_token`（dataload）に設定してもよい。
+> 古い無効な `SHOPIFY_ADMIN_TOKEN` が残っていると優先されて 401 になるので削除すること。
 
 ## 3. 初期データの投入 (seed)
 
@@ -57,7 +59,7 @@ Shopify 標準のテストデータ生成では割引が十分に作られない
 ```powershell
 cd shopifystore\seed
 uv sync
-Copy-Item .env.example .env    # SHOPIFY_SHOP / SHOPIFY_ADMIN_TOKEN を記入
+Copy-Item .env.example .env    # SHOPIFY_SHOP / SHOPIFY_CLIENT_ID / SHOPIFY_CLIENT_SECRET を記入
 
 uv run python seed.py          # 全件投入
 # 個別に投入する場合:

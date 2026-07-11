@@ -35,13 +35,25 @@ CHECKOUT_TYPES = {
 @dlt.source(name="shopify")
 def shopify_source(
     shop: str = dlt.config.value,
-    access_token: str = dlt.secrets.value,
+    access_token: str | None = None,
+    client_id: str | None = None,
+    client_secret: str | None = None,
     api_version: str = "2025-01",
     page_size: int = 100,
 ) -> Iterable[DltResource]:
-    """Shopify の主要オブジェクトを raw スキーマへ幅広くロードするソース。"""
+    """Shopify の主要オブジェクトを raw スキーマへ幅広くロードするソース。
 
-    client = ShopifyGraphQLClient(shop=shop, access_token=access_token, api_version=api_version)
+    認証は client_id + client_secret (Client Credentials Grant) か access_token の
+    いずれか。dlt が config/secrets/環境変数から注入する。
+    """
+
+    client = ShopifyGraphQLClient(
+        shop=shop,
+        api_version=api_version,
+        access_token=access_token,
+        client_id=client_id,
+        client_secret=client_secret,
+    )
 
     def _bulk_resource(query: str, type_map: dict[str, str]) -> Iterator[Any]:
         """Bulk を実行し、各レコードを型に応じたテーブル名へ振り分けて yield する。"""

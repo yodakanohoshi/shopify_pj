@@ -37,14 +37,17 @@ Shopify 開発ストアの Admin GraphQL API からデータを抽出し、DuckD
 uv sync
 
 # 認証情報を設定 (どちらか一方でよい)
-Copy-Item .dlt\secrets.toml.example .dlt\secrets.toml   # access_token を記入
+Copy-Item .dlt\secrets.toml.example .dlt\secrets.toml   # client_id / client_secret を記入
 #   または
-Copy-Item .env.example .env                              # SHOPIFY_* を記入
+Copy-Item .env.example .env                              # SHOPIFY_CLIENT_ID / SHOPIFY_CLIENT_SECRET を記入
 
 # shop / api_version は .dlt/config.toml で設定
 ```
 
-Admin API トークンの取得手順は [`../shopifystore/README.md`](../shopifystore/README.md) を参照。
+Dev Dashboard アプリの **Client ID / Secret** を設定すると、実行時に Client Credentials Grant で
+アクセストークン (24h) を自動取得・更新する。固定トークン (App Automation Token 等) を使う場合は
+`access_token` / `SHOPIFY_ACCESS_TOKEN` のみ設定する。取得手順は
+[`../shopifystore/README.md`](../shopifystore/README.md) / [`../shopifystore/docs/02-dev-store-and-app.md`](../shopifystore/docs/02-dev-store-and-app.md) を参照。
 
 ## 実行
 

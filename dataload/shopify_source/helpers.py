@@ -1,4 +1,10 @@
-"""Shopify Admin GraphQL クライアントとページング/整形ヘルパー。"""
+"""Shopify Admin GraphQL クライアントとページング/整形ヘルパー。
+
+認証は2方式に対応する:
+- **Client Credentials Grant** (推奨): Dev Dashboard アプリの Client ID / Secret から
+  アクセストークンを自動取得 (24時間で失効するため自動更新)。
+- **静的トークン**: App Automation Token など固定トークンをそのまま利用。
+"""
 
 from __future__ import annotations
 
@@ -10,6 +16,7 @@ import requests
 # GraphQL のスロットル (leaky bucket) を考慮した既定リトライ回数
 _MAX_RETRIES = 6
 _DEFAULT_RESTORE_RATE = 50.0  # points/sec (Standard プラン既定)
+_TOKEN_MARGIN = 120  # トークン失効の何秒前に更新するか
 
 
 class ShopifyGraphQLError(RuntimeError):
@@ -19,26 +26,67 @@ class ShopifyGraphQLError(RuntimeError):
 class ShopifyGraphQLClient:
     """Admin GraphQL API への薄いクライアント。
 
-    - X-Shopify-Access-Token 認証
+    - Client Credentials Grant / 静的トークンの両対応 (X-Shopify-Access-Token)
     - THROTTLED / 5xx に対する指数バックオフ + コスト連動スリープ
     """
 
-    def __init__(self, shop: str, access_token: str, api_version: str, timeout: int = 60):
+    def __init__(
+        self,
+        shop: str,
+        api_version: str,
+        access_token: str | None = None,
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        timeout: int = 60,
+    ):
         # shop は "my-store" でも "my-store.myshopify.com" でも受け付ける
-        host = shop if shop.endswith(".myshopify.com") else f"{shop}.myshopify.com"
-        self.endpoint = f"https://{host}/admin/api/{api_version}/graphql.json"
-        self._session = requests.Session()
-        self._session.headers.update(
-            {
-                "Content-Type": "application/json",
-                "X-Shopify-Access-Token": access_token,
-            }
-        )
-        self._timeout = timeout
+        self.host = shop if shop.endswith(".myshopify.com") else f"{shop}.myshopify.com"
+        self.endpoint = f"https://{self.host}/admin/api/{api_version}/graphql.json"
 
+        self._static_token = access_token or None
+        self._client_id = client_id or None
+        self._client_secret = client_secret or None
+        if not self._static_token and not (self._client_id and self._client_secret):
+            raise ShopifyGraphQLError(
+                "認証情報が未設定です。access_token、または client_id + client_secret を設定してください。"
+            )
+
+        self._session = requests.Session()
+        self._session.headers.update({"Content-Type": "application/json"})
+        self._timeout = timeout
+        self._token: str | None = None
+        self._token_expiry = 0.0
+
+    # --- 認証 -------------------------------------------------------------
+    def _access_token(self) -> str:
+        if self._static_token:
+            return self._static_token
+        if self._token and time.monotonic() < self._token_expiry:
+            return self._token
+        resp = requests.post(
+            f"https://{self.host}/admin/oauth/access_token",
+            data={
+                "grant_type": "client_credentials",
+                "client_id": self._client_id,
+                "client_secret": self._client_secret,
+            },
+            timeout=30,
+        )
+        if resp.status_code >= 400:
+            raise ShopifyGraphQLError(
+                f"アクセストークン取得に失敗 (HTTP {resp.status_code})。"
+                f"Client ID/Secret とアプリのストアへのインストールを確認してください。\n  応答: {resp.text[:400]}"
+            )
+        data = resp.json()
+        self._token = data["access_token"]
+        self._token_expiry = time.monotonic() + data.get("expires_in", 86399) - _TOKEN_MARGIN
+        return self._token
+
+    # --- 実行 -------------------------------------------------------------
     def execute(self, query: str, variables: dict[str, Any]) -> dict[str, Any]:
         payload = {"query": query, "variables": variables}
         for attempt in range(_MAX_RETRIES):
+            self._session.headers["X-Shopify-Access-Token"] = self._access_token()
             resp = self._session.post(self.endpoint, json=payload, timeout=self._timeout)
 
             # HTTP レベルのレート制限 / 一時エラー
@@ -46,7 +94,15 @@ class ShopifyGraphQLClient:
                 self._sleep_backoff(attempt, resp)
                 continue
 
-            resp.raise_for_status()
+            if resp.status_code >= 400:
+                hint = ""
+                if resp.status_code == 401:
+                    hint = " — アクセストークンが無効か、アプリが対象ストアに未インストールです"
+                elif resp.status_code == 403:
+                    hint = " — アクセススコープ不足です"
+                raise ShopifyGraphQLError(
+                    f"HTTP {resp.status_code}{hint}\n  URL: {self.endpoint}\n  応答: {resp.text[:500]}"
+                )
             body = resp.json()
 
             errors = body.get("errors")
@@ -71,9 +127,7 @@ class ShopifyGraphQLClient:
 
     @staticmethod
     def _sleep_on_cost(body: dict[str, Any], attempt: int) -> None:
-        throttle = (
-            body.get("extensions", {}).get("cost", {}).get("throttleStatus", {})
-        )
+        throttle = body.get("extensions", {}).get("cost", {}).get("throttleStatus", {})
         requested = throttle.get("requestedQueryCost", 100)
         available = throttle.get("currentlyAvailable", 0)
         restore = throttle.get("restoreRate", _DEFAULT_RESTORE_RATE) or _DEFAULT_RESTORE_RATE

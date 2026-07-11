@@ -28,8 +28,9 @@ def _bridge_env() -> None:
     mapping = {
         "SHOPIFY_SHOP": "SOURCES__SHOPIFY__SHOP",
         "SHOPIFY_ACCESS_TOKEN": "SOURCES__SHOPIFY__ACCESS_TOKEN",
+        "SHOPIFY_CLIENT_ID": "SOURCES__SHOPIFY__CLIENT_ID",
+        "SHOPIFY_CLIENT_SECRET": "SOURCES__SHOPIFY__CLIENT_SECRET",
         "SHOPIFY_API_VERSION": "SOURCES__SHOPIFY__API_VERSION",
-        "SHOPIFY_START_DATE": "SOURCES__SHOPIFY__START_DATE",
     }
     for src, dst in mapping.items():
         if os.getenv(src) and not os.getenv(dst):
