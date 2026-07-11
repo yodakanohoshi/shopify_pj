@@ -6,4 +6,3 @@ log_level = "INFO"
 # shop はサブドメイン ("my-store") でもフルドメインでも可
 shop = "your-dev-store"
 api_version = "2025-01"
-start_date = "2024-01-01T00:00:00Z"

@@ -2,16 +2,33 @@
 
 Shopify 開発ストアの Admin GraphQL API からデータを抽出し、DuckDB の `raw` スキーマへロードする [dlt](https://dlthub.com/) パイプライン。
 
+分析に有用なソースは、dlt 標準ソースが非対応でも discounts と同様にカスタム取得する。
+
+## 取得方式
+
+- **Bulk Operations** (`shopify_source/bulk.py`): 大きくネストするソースを1クエリで全件エクスポート。
+  結果 JSONL の各ノードを gid の型で判定し、型ごとの raw テーブルへ振り分ける。
+  子ノードは `__parentId` → `parent_id` として親の gid を保持する (join キー)。
+- **通常ページング** (`shopify_source/helpers.py`): 件数の少ない/Bulk に載せにくいソース向け。
+
+いずれも `write_disposition="replace"` の全件洗い替え (Bulk は全件エクスポートのため)。
+
 ## 取得対象リソース
 
-| リソース (raw テーブル) | API | 増分 | 備考 |
-|---|---|---|---|
-| `orders` | `orders` (GraphQL) | `updatedAt` merge | 明細 `orders__line_items`、割引適用 `orders__discount_applications` を子テーブルとして展開 |
-| `customers` | `customers` (GraphQL) | `updatedAt` merge | |
-| `products` | `products` (GraphQL) | `updatedAt` merge | バリアント `products__variants` を子テーブルへ展開 |
-| `discounts` | `discountNodes` (GraphQL) | 全件 merge (id) | **dlt 標準ソース非対応**。コード割引・自動割引を統合取得。コードは `discounts__codes` |
+| ソース | 方式 | 生成される raw テーブル |
+|---|---|---|
+| 注文 | Bulk | `orders`, `order_line_items` |
+| 商品 | Bulk | `products`, `product_variants` (原価 `inventory_item__unit_cost` 含む) |
+| 顧客 | Bulk | `customers` (メール配信同意含む), `customer_addresses` |
+| コレクション | Bulk | `collections`, `collection_products` (商品所属) |
+| 放棄チェックアウト | Bulk | `abandoned_checkouts`, `abandoned_checkout_line_items` |
+| 割引 | ページング | `discounts`, `discounts__codes` (**dlt 標準非対応**・`discountNodes`) |
+| ロケーション | ページング | `locations` |
 
-> dlt はネストした配列を自動的に子テーブル (`<親>__<フィールド>`) へ正規化する。GraphQL の `edges/node` 構造は [`helpers.unwrap_connections`](shopify_source/helpers.py) で畳んでから渡している。
+> Bulk 制約: 1クエリ connection 最大5・ネスト最大2階層・ノードは Node(id)必須。
+> このため注文の割引適用 (`discountApplications`, Node 非実装) は Bulk 対象外とし、
+> 注文の `discount_codes` (コード文字列) と `discounts` ディメンションで代替する。
+> 同時に実行できる Bulk operation は1つのみ (リソースは逐次実行される)。
 
 ## セットアップ
 
@@ -53,9 +70,10 @@ uv run python -c "import duckdb; con=duckdb.connect('shopify.duckdb'); print(con
 dataload/
 ├─ shopify_pipeline.py        # エントリポイント (dlt.pipeline → DuckDB raw)
 ├─ shopify_source/
-│  ├─ __init__.py             # @dlt.source と各 @dlt.resource
+│  ├─ __init__.py             # @dlt.source と各 @dlt.resource (Bulk/ページング)
+│  ├─ bulk.py                 # Bulk Operations 実行 + JSONL 型振り分け
 │  ├─ helpers.py              # GraphQL クライアント / ページング / edges 畳み込み
-│  └─ queries.py              # GraphQL クエリ定義
+│  └─ queries.py              # Bulk / ページング クエリ定義
 └─ .dlt/
    ├─ config.toml             # shop / api_version 等の非機密設定
    └─ secrets.toml(.example)  # access_token (git 管理外)
