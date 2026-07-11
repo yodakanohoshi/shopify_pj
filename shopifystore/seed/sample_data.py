@@ -6,14 +6,14 @@
 
 # 商品: (タイトル, 商品タイプ, ベンダー, 価格, 原価, 在庫)
 PRODUCTS = [
-    ("Aurora Hoodie", "Apparel", "Northlight", 6800, 3200, 40),
-    ("Cascade Water Bottle", "Accessories", "Northlight", 2200, 800, 120),
-    ("Ember Scented Candle", "Home", "Hearth&Co", 1800, 600, 80),
-    ("Nimbus Rain Jacket", "Apparel", "Northlight", 12800, 6400, 25),
-    ("Pebble Wireless Mouse", "Electronics", "Cobalt", 3900, 2100, 60),
-    ("Slate Notebook A5", "Stationery", "Cobalt", 900, 250, 200),
-    ("Lumen Desk Lamp", "Home", "Hearth&Co", 5400, 2600, 35),
-    ("Terra Ceramic Mug", "Home", "Hearth&Co", 1600, 500, 150),
+    ("Aurora Hoodie", "Apparel", "Northlight", 6, 3, 40),
+    ("Cascade Water Bottle", "Accessories", "Northlight", 5, 1, 120),
+    ("Ember Scented Candle", "Home", "Hearth&Co", 7, 6, 80),
+    ("Nimbus Rain Jacket", "Apparel", "Northlight", 2, 1, 25),
+    ("Pebble Wireless Mouse", "Electronics", "Cobalt", 3, 2, 60),
+    ("Slate Notebook A5", "Stationery", "Cobalt", 3, 2, 200),
+    ("Lumen Desk Lamp", "Home", "Hearth&Co", 5, 2, 35),
+    ("Terra Ceramic Mug", "Home", "Hearth&Co", 7, 5, 150),
 ]
 
 # 顧客: (姓, 名, メール, 国コード, メール配信同意)
@@ -36,7 +36,7 @@ COLLECTIONS = [
 DISCOUNTS = [
     {"kind": "percentage", "title": "Spring Sale 10%", "code": "SPRING10", "percentage": 0.10,
      "usage_limit": 100},
-    {"kind": "amount", "title": "500 OFF Coupon", "code": "SAVE500", "amount": 500,
+    {"kind": "amount", "title": "500 OFF Coupon", "code": "SAVE500", "amount": 1,
      "usage_limit": 50},
     {"kind": "free_shipping", "title": "Free Shipping", "code": "FREESHIP", "usage_limit": 200},
     {"kind": "automatic", "title": "Auto 5% Off", "percentage": 0.05},
@@ -47,7 +47,7 @@ ORDERS = [
     (0, [(0, 1), (2, 2)], None),
     (1, [(1, 3)], 0.10),
     (2, [(3, 1), (4, 1)], None),
-    (3, [(5, 5)], 0.05),
+    (3, [(5, 1)], 0.05),
     (0, [(4, 2)], None),
     (1, [(2, 1), (5, 3)], 0.10),
     (2, [(0, 1)], None),
