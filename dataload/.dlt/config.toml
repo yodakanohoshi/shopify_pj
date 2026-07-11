@@ -1,0 +1,9 @@
+# dlt の非機密設定。機密情報 (access_token) は secrets.toml か環境変数へ。
+[runtime]
+log_level = "INFO"
+
+[sources.shopify]
+# shop はサブドメイン ("my-store") でもフルドメインでも可
+shop = "your-dev-store"
+api_version = "2025-01"
+start_date = "2024-01-01T00:00:00Z"
