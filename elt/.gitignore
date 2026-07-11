@@ -1,0 +1,14 @@
+# dbt 生成物
+target/
+dbt_packages/
+logs/
+.user.yml
+package-lock.yml
+
+# Python
+.venv/
+__pycache__/
+
+# DuckDB (dataload と共有。誤コミット防止)
+*.duckdb
+*.duckdb.wal

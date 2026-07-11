@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: "顧客ディメンション。属性 + 実注文からの集計指標。1 行 = 1 顧客。"
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: orders_count
+        description: "キャンセルを除く注文数。"
+
+  - name: dim_products
+    description: "商品ディメンション。バリアント価格レンジ・在庫を集約。1 行 = 1 商品。"
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+
+  - name: fct_orders
+    description: "注文ファクト。1 行 = 1 注文。売上・AOV 分析の基点。"
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: customer_id
+        description: "顧客ディメンションへの外部キー (ゲスト注文は null)。"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+              config:
+                where: "customer_id is not null"
+
+  - name: fct_order_lines
+    description: "注文明細ファクト。1 行 = 1 明細。商品別売上分析。"
+    columns:
+      - name: order_line_id
+        tests: [unique, not_null]
+      - name: order_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('fct_orders')
+                field: order_id
+
+  - name: fct_discount_performance
+    description: "割引パフォーマンスファクト。1 行 = 1 割引。利用・値引き効果を評価。"
+    columns:
+      - name: discount_id
+        tests: [unique, not_null]

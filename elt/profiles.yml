@@ -1,0 +1,11 @@
+# dbt-duckdb プロファイル。dataload/ の dlt が書き込んだ DuckDB ファイルを共有する。
+# 実行時は `dbt build --profiles-dir .` のようにこのディレクトリを指定する。
+shopify_elt:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # dlt の出力先と同一ファイル (相対パスは elt/ 基準)。環境変数で上書き可。
+      path: "{{ env_var('SHOPIFY_DUCKDB_PATH', '../dataload/shopify.duckdb') }}"
+      schema: main
+      threads: 4

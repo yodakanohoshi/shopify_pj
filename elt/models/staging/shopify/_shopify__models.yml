@@ -1,0 +1,68 @@
+version: 2
+
+models:
+  - name: stg_shopify__orders
+    description: "注文ヘッダ (クレンジング・型付け済み)。1 行 = 1 注文。"
+    columns:
+      - name: order_id
+        description: "注文 ID (gid)。"
+        tests: [unique, not_null]
+      - name: order_dlt_id
+        description: "子テーブル (明細・割引適用) 結合用の dlt 行 ID。"
+        tests: [not_null]
+      - name: customer_id
+        description: "注文者の顧客 ID。ゲスト注文では null。"
+
+  - name: stg_shopify__order_lines
+    description: "注文明細。1 行 = 1 明細。order_dlt_id で注文に紐づく。"
+    columns:
+      - name: order_line_id
+        tests: [unique, not_null]
+      - name: order_dlt_id
+        description: "親注文の dlt 行 ID (stg_shopify__orders.order_dlt_id)。"
+        tests: [not_null]
+
+  - name: stg_shopify__order_discount_applications
+    description: "注文単位で適用された割引の内訳。"
+    columns:
+      - name: order_discount_id
+        tests: [unique, not_null]
+
+  - name: stg_shopify__customers
+    description: "顧客マスタ。1 行 = 1 顧客。"
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+
+  - name: stg_shopify__products
+    description: "商品マスタ。1 行 = 1 商品。"
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+      - name: product_dlt_id
+        description: "バリアント結合用の dlt 行 ID。"
+        tests: [not_null]
+
+  - name: stg_shopify__product_variants
+    description: "商品バリアント。1 行 = 1 バリアント。"
+    columns:
+      - name: variant_id
+        tests: [unique, not_null]
+
+  - name: stg_shopify__discounts
+    description: "割引 (コード割引 + 自動割引)。dlt 標準非対応をカスタム取得。"
+    columns:
+      - name: discount_id
+        tests: [unique, not_null]
+      - name: discount_method
+        description: "code / automatic / other。"
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["code", "automatic", "other"]
+
+  - name: stg_shopify__discount_codes
+    description: "割引コード。1 行 = 1 コード。code 別の利用回数を持つ。"
+    columns:
+      - name: discount_code_id
+        tests: [unique, not_null]

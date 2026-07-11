@@ -1,0 +1,37 @@
+version: 2
+
+sources:
+  - name: shopify_raw
+    description: "dlt が Shopify Admin GraphQL API から投入した raw スキーマ。"
+    schema: raw
+    # dlt はネストした配列を `<親>__<子>` の子テーブルへ正規化する。
+    tables:
+      - name: orders
+        description: "注文ヘッダ。金額は *__shop_money__amount に正規化される。"
+        columns:
+          - name: id
+            description: "注文の GraphQL global ID (gid://shopify/Order/...)。"
+            tests: [unique, not_null]
+      - name: orders__line_items
+        description: "注文明細 (orders の子テーブル)。_dlt_parent_id が orders.id を参照。"
+      - name: orders__discount_applications
+        description: "注文に適用された割引 (orders の子テーブル)。"
+      - name: customers
+        description: "顧客。"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+      - name: products
+        description: "商品ヘッダ。"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+      - name: products__variants
+        description: "商品バリアント (products の子テーブル)。"
+      - name: discounts
+        description: "割引 (discountNodes)。dlt 標準非対応をカスタム取得。discount_type に種別。"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+      - name: discounts__codes
+        description: "割引コード (discounts の子テーブル)。code 別の利用回数を含む。"

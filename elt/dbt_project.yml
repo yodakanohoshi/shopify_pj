@@ -1,0 +1,30 @@
+name: "shopify_elt"
+version: "0.1.0"
+config-version: 2
+
+profile: "shopify_elt"
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# dlt が投入する raw スキーマを source として参照する。
+# 変換層はスキーマを分けて出力する: staging / intermediate / marts。
+models:
+  shopify_elt:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts

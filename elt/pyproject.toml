@@ -1,0 +1,12 @@
+[project]
+name = "shopify-elt"
+version = "0.1.0"
+description = "Shopify raw → stg → intermediate → marts (dbt / DuckDB)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "dbt-duckdb>=1.9.0",
+]
+
+[tool.uv]
+package = false

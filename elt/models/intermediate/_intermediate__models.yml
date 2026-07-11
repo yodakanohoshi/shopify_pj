@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: int_orders__enriched
+    description: "注文ヘッダ + 明細集計 + 顧客属性。fct_orders の素地。1 行 = 1 注文。"
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+
+  - name: int_order_lines__enriched
+    description: "注文明細 + 注文日 + 商品属性。1 行 = 1 明細。"
+    columns:
+      - name: order_line_id
+        tests: [unique, not_null]
+
+  - name: int_discounts__enriched
+    description: "割引 + コード別利用集計 + 注文適用実績。1 行 = 1 割引。"
+    columns:
+      - name: discount_id
+        tests: [unique, not_null]
