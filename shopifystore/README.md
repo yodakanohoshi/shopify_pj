@@ -38,8 +38,11 @@ Dev Dashboard (dev.shopify.com/dashboard)
 2. アプリの構成で **アクセススコープ**を設定（バージョンを作成して保存）:
    - 読み取り: `read_orders`, `read_products`, `read_customers`, `read_discounts`, `read_inventory`, `read_locations`
    - シード投入も行うなら `write_products`, `write_customers`, `write_discounts`, `write_draft_orders`, `write_orders`
-3. 左パネル **Home** → **Install app** → ステップ 1 の開発ストアにインストール。
-4. アプリ → **Settings** で **Client ID** と **Client secret** をコピー。
+3. **保護対象顧客データアクセスを有効化**（顧客・注文の顧客情報に必須。未承認だと `ACCESS_DENIED`）:
+   アプリの **API access → Protected customer data access → Request access** → **Level 2**（氏名/メール/電話/住所）
+   と全フィールドを選択 → データ保護詳細を入力。**開発ストアは審査不要で即時有効化**。
+4. 左パネル **Home** → **Install app** → ステップ 1 の開発ストアにインストール。
+5. アプリ → **Settings** で **Client ID** と **Client secret** をコピー。
 
 この Client ID / Secret を:
 - 抽出用に `dataload/.dlt/secrets.toml`（`client_id` / `client_secret`）または `dataload/.env`

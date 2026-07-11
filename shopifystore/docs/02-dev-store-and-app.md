@@ -40,6 +40,17 @@ Dev Dashboard のアプリでは、UI に固定トークンは表示されない
    > 開発ストアなので迷ったら上記を全付与でよい。放棄チェックアウトは `read_orders` の範囲。
    > 設定はアプリの「バージョン」を作成して保存する形になる（Webhooks API version は最新でよい）。
 
+3.5. **保護対象顧客データアクセス（Protected customer data）を有効化**。
+   顧客・注文の顧客・住所などの個人情報は、スコープとは別に承認が必要
+   （未承認だと `ACCESS_DENIED: This app is not approved to access the Customer object` になる）。
+
+   - アプリの **API access（API access requests）** → **Protected customer data access** → **Request access**。
+   - **Level 2**（氏名・メール・電話・住所を含む）を選び、必要なフィールドを選択。
+   - **Data protection details** を入力（開発用途なら記入・チェックのみで可）。
+   - **開発ストア向けは審査不要で即時に有効化**される。
+
+   > 本プロジェクトは顧客名・メール・住所・配信同意を扱うため **Level 2 + 全フィールド**を選ぶ。
+
 ## ステップ 4: 開発ストアへインストール
 
 1. アプリ画面の左パネル **Home** → 下にスクロールして **Install app**。

@@ -48,6 +48,9 @@ uv run dbt docs serve --profiles-dir .
 | DuckDB が開けない/ロックされる | dlt ロードと dbt を**同時に**走らせない (単一ライタ) |
 | Bulk が `already running` で失敗 | 直前の Bulk 完了待ち。パイプラインは自動でリソースを逐次実行する |
 | データが 0 件 | ストアにデータが無い → [05. seed](05-seeding-data.md) で投入 |
+| `401 Unauthorized` | トークン無効/アプリ未インストール。古い `SHOPIFY_ADMIN_TOKEN` が残っていないか確認 |
+| `ACCESS_DENIED ... Customer object` | 保護対象顧客データ未承認 → [02 ステップ3.5](02-dev-store-and-app.md) で Level 2 を有効化 |
+| `403` / スコープ不足 | アプリのアクセススコープに `read_*`/`write_*` を追加 |
 
 ## 出力の確認 (SQL)
 
