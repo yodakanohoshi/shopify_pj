@@ -1,0 +1,18 @@
+# Python / uv
+.venv/
+__pycache__/
+*.pyc
+
+# 認証情報
+.env
+**/.dlt/secrets.toml
+
+# DuckDB (dlt/dbt 共有の生成物)
+*.duckdb
+*.duckdb.wal
+
+# dlt / dbt 生成物
+.dlt/pipelines/
+elt/target/
+elt/dbt_packages/
+elt/logs/
