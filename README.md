@@ -53,7 +53,7 @@ uv run dbt build --profiles-dir .
 
 - [uv](https://docs.astral.sh/uv/) (Python 管理) — 導入済み
 - Node.js LTS + [@shopify/cli](https://shopify.dev/docs/api/shopify-cli) — 導入済み (テーマ/アプリ開発は任意)
-- Shopify Partner アカウント (無料) と開発ストア — [`shopifystore/README.md`](shopifystore/README.md) 参照
+- Shopify 開発ストア + Admin API トークン — [Dev Dashboard](https://dev.shopify.com/dashboard) で用意 ([`shopifystore/README.md`](shopifystore/README.md) 参照)
 
 ## メモ
 

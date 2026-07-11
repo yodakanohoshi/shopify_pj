@@ -12,10 +12,11 @@ Shopify は EC ストアを構築・運営する SaaS。商品登録・注文・
 
 | 用語 | 説明 |
 |---|---|
-| **Shopify Partner** | 開発者向けの無料アカウント。開発ストアを無制限に作れる |
-| **開発ストア (development store)** | テスト用の無料ストア。本番販売はできないが機能はほぼ同じ。分析検証に最適 |
+| **Dev Dashboard** | Shopify 開発の統合ハブ（<https://dev.shopify.com/dashboard>）。アプリ・ストアを一元管理。本プロジェクトの入口 |
+| **Shopify Partner** | 開発者向けの無料アカウント。Dev Dashboard へは Partner からも入れる |
+| **開発ストア (dev store)** | テスト用の無料ストア。本番販売はできないが機能はほぼ同じ。分析検証に最適 |
 | **Admin (管理画面)** | ストアの運営画面。商品・注文・割引などをここで操作する |
-| **カスタムアプリ (custom app)** | 1ストア専用のアプリ。**Admin API トークン**を発行する入口 |
+| **アプリ (app)** | **Admin API トークン**を発行する入口。Dev Dashboard で作成しストアにインストールする |
 | **Admin API** | ストアデータを読み書きする API。本プロジェクトは **GraphQL** 版を使う |
 | **アクセススコープ (scope)** | API で何を読めるかの権限 (例: `read_orders`, `read_discounts`) |
 | **Shopify CLI** | テーマ/アプリ開発用のコマンドラインツール (分析基盤には必須ではない) |

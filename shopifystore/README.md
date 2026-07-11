@@ -9,34 +9,39 @@
 ## 全体像
 
 ```
-Shopify Partner (無料)
-   └─ 開発ストア作成
-        └─ カスタムアプリ作成 → Admin API トークン (shpat_...)
-             ├─ seed/  (このディレクトリのスクリプト) でデータ投入
-             └─ dataload/ の dlt がこのトークンで抽出
+Dev Dashboard (dev.shopify.com/dashboard)
+   ├─ Stores → 開発ストア作成
+   └─ Apps   → アプリ作成 → 開発ストアにインストール → Admin API アクセストークン
+                  ├─ seed/  (このディレクトリのスクリプト) でデータ投入
+                  └─ dataload/ の dlt がこのトークンで抽出
 ```
+
+> 手順の詳細・スクリーンショット的な流れは初心者向けガイド
+> [`docs/02-dev-store-and-app.md`](docs/02-dev-store-and-app.md) を参照。
 
 ---
 
-## 1. Partner アカウントと開発ストア
+## 1. 開発ストアの作成（Dev Dashboard）
 
-1. <https://www.shopify.com/partners> で無料の Partner アカウントを作成。
-2. Partner Dashboard → **Stores** → **Add store** → **Create development store**。
-   - 用途: *Test and build* を選択。
-   - 開発ストアは無料・無期限。ただし本番販売は不可 (分析検証には十分)。
-3. 必要なら **Add test data** で商品・注文のサンプルを自動生成できる (任意)。
+1. <https://dev.shopify.com/dashboard> にログイン（Shopify / Partner アカウント）。
+   - 別ルート: Shopify Admin の右上ストア名 → **Dev Dashboard**、または
+     Partner Dashboard → **App distribution** → **Visit Dev Dashboard**。
+2. **Stores** タブ → **Create store** → **Development store (Dev store)**。
+3. ストア名 = `xxxx.myshopify.com` の `xxxx`（= `SHOPIFY_SHOP`）。無料・無期限・本番販売不可。
 
-> 開発ストアは Shopify CLI では作成できない。CLI はテーマ/アプリ開発用。ストア作成は Partner Dashboard で行う。
+## 2. アプリと Admin API トークン（Dev Dashboard）
 
-## 2. カスタムアプリと Admin API トークン
-
-1. 作成した開発ストアの管理画面 → **Settings** → **Apps and sales channels** → **Develop apps**。
-2. **Create an app** → 名前を付ける (例 `analytics-loader`)。
-3. **Configuration** → **Admin API integration** → 以下のスコープを付与:
+1. **Apps** タブ → **Create app** → **Create in Dev Dashboard**（API 連携/自動化向け、コード雛形なし）。
+2. アプリの **Configuration / API access** で Admin API のアクセススコープを付与:
    - 読み取り: `read_orders`, `read_products`, `read_customers`, `read_discounts`, `read_inventory`, `read_locations`
    - シード投入も行うなら `write_products`, `write_customers`, `write_discounts`, `write_draft_orders`, `write_orders`
-4. **Install app** → **Admin API access token** (`shpat_...`) を控える。**一度しか表示されない**。
-5. API バージョンは `2025-01` を想定 (変更時は各所の設定を合わせる)。
+3. **ステップ 1 の開発ストアにインストール**（Install / Select store）。
+4. アプリの **Client credentials / API access** に表示される **Admin API access token** を控える
+   （`X-Shopify-Access-Token` として使う値。安全に保管）。
+5. API バージョンは `2025-01` を想定（アプリ設定の API version と合わせる）。
+
+> 単一ストアだけなら、ストア Admin → **Settings → Apps and sales channels → Develop apps** で作る
+> 「カスタムアプリ」の静的トークン (`shpat_...`) も従来どおり利用できる。
 
 このトークンを:
 - 抽出用に `dataload/.dlt/secrets.toml` (または `dataload/.env`)
