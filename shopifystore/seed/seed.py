@@ -1,12 +1,18 @@
-"""Shopify 開発ストアへ商品・顧客・割引・注文を投入する。
+"""Shopify 開発ストアへ商品・顧客・コレクション・割引・注文を投入する。
 
 使い方::
 
     uv run python seed.py                 # 全カテゴリを順に投入
-    uv run python seed.py --only discounts,orders
+    uv run python seed.py --only products,customers,collections,discounts,orders
 
 前提: .env に SHOPIFY_SHOP / SHOPIFY_ADMIN_TOKEN を設定済み。
 API バージョンは 2025-01 を想定 (GraphQL Admin API)。
+
+投入されるデータは分析基盤 (dataload/elt) の検証を意図している:
+- 商品に原価 (cost) → 粗利分析
+- コレクション → カテゴリ分析
+- メール配信同意 → 顧客セグメント分析
+- 割引4種 + 注文 → 売上・割引分析
 """
 
 from __future__ import annotations
@@ -29,6 +35,7 @@ mutation productCreate($input: ProductInput!) {
 }
 """
 
+# price と原価 (inventoryItem.cost) を同時に設定
 M_VARIANT_UPDATE = """
 mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
   productVariantsBulkUpdate(productId: $productId, variants: $variants) {
@@ -42,6 +49,32 @@ M_CUSTOMER_CREATE = """
 mutation customerCreate($input: CustomerInput!) {
   customerCreate(input: $input) {
     customer { id }
+    userErrors { field message }
+  }
+}
+"""
+
+M_EMAIL_CONSENT = """
+mutation customerEmailMarketingConsentUpdate($input: CustomerEmailMarketingConsentUpdateInput!) {
+  customerEmailMarketingConsentUpdate(input: $input) {
+    userErrors { field message }
+  }
+}
+"""
+
+M_COLLECTION_CREATE = """
+mutation collectionCreate($input: CollectionInput!) {
+  collectionCreate(input: $input) {
+    collection { id }
+    userErrors { field message }
+  }
+}
+"""
+
+M_COLLECTION_ADD = """
+mutation collectionAddProducts($id: ID!, $productIds: [ID!]!) {
+  collectionAddProducts(id: $id, productIds: $productIds) {
+    collection { id }
     userErrors { field message }
   }
 }
@@ -94,10 +127,11 @@ mutation draftOrderComplete($id: ID!) {
 
 
 # --- seed 各カテゴリ ------------------------------------------------------
-def seed_products(api: ShopifyAdmin) -> list[str]:
-    """商品を作成し価格を設定。作成した既定バリアント ID の一覧を返す。"""
+def seed_products(api: ShopifyAdmin) -> tuple[list[str], list[str]]:
+    """商品を作成し価格と原価を設定。(product_ids, variant_ids) を返す。"""
+    product_ids: list[str] = []
     variant_ids: list[str] = []
-    for title, ptype, vendor, price, _inventory in data.PRODUCTS:
+    for title, ptype, vendor, price, cost, _inventory in data.PRODUCTS:
         payload = api.mutate(
             M_PRODUCT_CREATE,
             {"input": {"title": title, "productType": ptype, "vendor": vendor, "status": "ACTIVE"}},
@@ -107,26 +141,52 @@ def seed_products(api: ShopifyAdmin) -> list[str]:
         variant_id = payload["product"]["variants"]["edges"][0]["node"]["id"]
         api.mutate(
             M_VARIANT_UPDATE,
-            {"productId": product_id, "variants": [{"id": variant_id, "price": str(price)}]},
+            {"productId": product_id, "variants": [{
+                "id": variant_id,
+                "price": str(price),
+                "inventoryItem": {"cost": str(cost)},
+            }]},
             "productVariantsBulkUpdate",
         )
+        product_ids.append(product_id)
         variant_ids.append(variant_id)
-        print(f"  product: {title} ({price})")
-    return variant_ids
+        print(f"  product: {title} (price={price}, cost={cost})")
+    return product_ids, variant_ids
 
 
 def seed_customers(api: ShopifyAdmin) -> list[str]:
     customer_ids: list[str] = []
-    for first, last, email, country in data.CUSTOMERS:
+    for first, last, email, country, subscribed in data.CUSTOMERS:
         payload = api.mutate(
             M_CUSTOMER_CREATE,
             {"input": {"firstName": first, "lastName": last, "email": email,
                        "addresses": [{"countryCode": country}]}},
             "customerCreate",
         )
-        customer_ids.append(payload["customer"]["id"])
-        print(f"  customer: {first} {last} <{email}>")
+        cid = payload["customer"]["id"]
+        customer_ids.append(cid)
+        if subscribed:
+            api.mutate(M_EMAIL_CONSENT, {"input": {
+                "customerId": cid,
+                "emailMarketingConsent": {
+                    "marketingState": "SUBSCRIBED",
+                    "marketingOptInLevel": "SINGLE_OPT_IN",
+                },
+            }}, "customerEmailMarketingConsentUpdate")
+        print(f"  customer: {first} {last} <{email}> subscribed={subscribed}")
     return customer_ids
+
+
+def seed_collections(api: ShopifyAdmin, product_ids: list[str]) -> None:
+    if not product_ids:
+        print("  [skip] collections には products の投入が必要です")
+        return
+    for title, product_idxs in data.COLLECTIONS:
+        created = api.mutate(M_COLLECTION_CREATE, {"input": {"title": title}}, "collectionCreate")
+        cid = created["collection"]["id"]
+        ids = [product_ids[i] for i in product_idxs]
+        api.mutate(M_COLLECTION_ADD, {"id": cid, "productIds": ids}, "collectionAddProducts")
+        print(f"  collection: {title} ({len(ids)} products)")
 
 
 def seed_discounts(api: ShopifyAdmin) -> None:
@@ -188,23 +248,27 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Shopify 開発ストアへのシード投入")
     parser.add_argument(
         "--only",
-        default="products,customers,discounts,orders",
+        default="products,customers,collections,discounts,orders",
         help="投入カテゴリをカンマ区切りで指定 (既定: 全部)",
     )
     args = parser.parse_args()
     only = {s.strip() for s in args.only.split(",") if s.strip()}
 
     api = ShopifyAdmin()
+    product_ids: list[str] = []
     variant_ids: list[str] = []
     customer_ids: list[str] = []
 
     try:
         if "products" in only:
             print("[products]")
-            variant_ids = seed_products(api)
+            product_ids, variant_ids = seed_products(api)
         if "customers" in only:
             print("[customers]")
             customer_ids = seed_customers(api)
+        if "collections" in only:
+            print("[collections]")
+            seed_collections(api, product_ids)
         if "discounts" in only:
             print("[discounts]")
             seed_discounts(api)

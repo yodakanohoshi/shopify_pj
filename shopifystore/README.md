@@ -1,7 +1,10 @@
 # shopifystore — 開発ストアの構築と初期データ投入
 
 無料の Shopify **開発ストア (development store)** を用意し、分析基盤 (dataload/elt) が取り込む
-元データ (商品・顧客・**割引**・注文) を Admin API 経由で投入するための手順とスクリプト。
+元データ (商品・顧客・コレクション・**割引**・注文) を Admin API 経由で投入するための手順とスクリプト。
+
+> **Shopify が初めての方へ**: 用語・ストア作成・データモデル・システムの仕組みを順に解説した
+> ガイドを [`docs/`](docs/) に用意した。まずそちらを読むのが近道。
 
 ## 全体像
 
@@ -30,7 +33,7 @@ Shopify Partner (無料)
 1. 作成した開発ストアの管理画面 → **Settings** → **Apps and sales channels** → **Develop apps**。
 2. **Create an app** → 名前を付ける (例 `analytics-loader`)。
 3. **Configuration** → **Admin API integration** → 以下のスコープを付与:
-   - `read_orders`, `read_products`, `read_customers`, `read_discounts`
+   - 読み取り: `read_orders`, `read_products`, `read_customers`, `read_discounts`, `read_inventory`, `read_locations`
    - シード投入も行うなら `write_products`, `write_customers`, `write_discounts`, `write_draft_orders`, `write_orders`
 4. **Install app** → **Admin API access token** (`shpat_...`) を控える。**一度しか表示されない**。
 5. API バージョンは `2025-01` を想定 (変更時は各所の設定を合わせる)。
@@ -57,10 +60,13 @@ uv run python seed.py --only products,customers,discounts,orders
 ```
 
 投入内容 (既定):
-- 商品 6 件 (バリアント価格付き)
-- 顧客 4 件
+- 商品 8 件 (価格 + **原価**付き → 粗利分析)
+- 顧客 5 件 (メール配信同意あり/なし → セグメント分析)
+- コレクション 3 件 (商品所属付き → カテゴリ分析)
 - 割引 4 件 (定率コード / 定額コード / 送料無料コード / 自動割引)
-- 注文 8 件 (ドラフト注文を確定。一部に手動割引を適用)
+- 注文 10 件 (ドラフト注文を確定。一部に手動割引を適用)
+
+詳細は [`docs/05-seeding-data.md`](docs/05-seeding-data.md)。
 
 ## 4. Shopify CLI (任意)
 
