@@ -2,51 +2,72 @@ version: 2
 
 models:
   - name: stg_shopify__orders
-    description: "注文ヘッダ (クレンジング・型付け済み)。1 行 = 1 注文。"
+    description: "注文ヘッダ (クレンジング済み)。1 行 = 1 注文。返金反映後の current/refunded を含む。"
     columns:
       - name: order_id
-        description: "注文 ID (gid)。"
         tests: [unique, not_null]
       - name: order_dlt_id
-        description: "子テーブル (明細・割引適用) 結合用の dlt 行 ID。"
+        description: "inline list 子 (discount_codes) 結合用の dlt 行 ID。"
         tests: [not_null]
-      - name: customer_id
-        description: "注文者の顧客 ID。ゲスト注文では null。"
 
   - name: stg_shopify__order_lines
-    description: "注文明細。1 行 = 1 明細。order_dlt_id で注文に紐づく。"
+    description: "注文明細。1 行 = 1 明細。order_id で注文に紐づく。"
     columns:
       - name: order_line_id
         tests: [unique, not_null]
-      - name: order_dlt_id
-        description: "親注文の dlt 行 ID (stg_shopify__orders.order_dlt_id)。"
+      - name: order_id
+        description: "親注文 ID (stg_shopify__orders.order_id)。"
         tests: [not_null]
 
-  - name: stg_shopify__order_discount_applications
-    description: "注文単位で適用された割引の内訳。"
-    columns:
-      - name: order_discount_id
-        tests: [unique, not_null]
+  - name: stg_shopify__order_discount_codes
+    description: "注文に適用された割引コード。1 行 = (注文 × コード)。"
 
   - name: stg_shopify__customers
-    description: "顧客マスタ。1 行 = 1 顧客。"
+    description: "顧客マスタ。1 行 = 1 顧客。メール配信同意を含む。"
     columns:
       - name: customer_id
         tests: [unique, not_null]
 
+  - name: stg_shopify__customer_addresses
+    description: "顧客住所。1 行 = 1 住所。customer_id で顧客に紐づく。"
+    columns:
+      - name: address_id
+        tests: [unique, not_null]
+
   - name: stg_shopify__products
-    description: "商品マスタ。1 行 = 1 商品。"
+    description: "商品マスタ。1 行 = 1 商品。標準タクソノミ category を含む。"
     columns:
       - name: product_id
         tests: [unique, not_null]
-      - name: product_dlt_id
-        description: "バリアント結合用の dlt 行 ID。"
-        tests: [not_null]
 
   - name: stg_shopify__product_variants
-    description: "商品バリアント。1 行 = 1 バリアント。"
+    description: "商品バリアント。1 行 = 1 バリアント。原価 unit_cost を含む。"
     columns:
       - name: variant_id
+        tests: [unique, not_null]
+      - name: product_id
+        description: "親商品 ID。"
+        tests: [not_null]
+
+  - name: stg_shopify__collections
+    description: "コレクション。1 行 = 1 コレクション。"
+    columns:
+      - name: collection_id
+        tests: [unique, not_null]
+
+  - name: stg_shopify__collection_products
+    description: "コレクション所属商品のブリッジ。1 行 = (コレクション × 商品)。"
+
+  - name: stg_shopify__abandoned_checkouts
+    description: "放棄チェックアウト。1 行 = 1 チェックアウト。is_recovered で復帰判定。"
+    columns:
+      - name: checkout_id
+        tests: [unique, not_null]
+
+  - name: stg_shopify__abandoned_checkout_lines
+    description: "放棄チェックアウト明細。1 行 = 1 明細。"
+    columns:
+      - name: checkout_line_id
         tests: [unique, not_null]
 
   - name: stg_shopify__discounts
@@ -55,14 +76,19 @@ models:
       - name: discount_id
         tests: [unique, not_null]
       - name: discount_method
-        description: "code / automatic / other。"
         tests:
           - accepted_values:
               arguments:
                 values: ["code", "automatic", "other"]
 
   - name: stg_shopify__discount_codes
-    description: "割引コード。1 行 = 1 コード。code 別の利用回数を持つ。"
+    description: "割引コード。1 行 = 1 コード。code 別利用回数を持つ。"
     columns:
       - name: discount_code_id
+        tests: [unique, not_null]
+
+  - name: stg_shopify__locations
+    description: "ロケーション (在庫/フルフィルメント拠点)。1 行 = 1 拠点。"
+    columns:
+      - name: location_id
         tests: [unique, not_null]

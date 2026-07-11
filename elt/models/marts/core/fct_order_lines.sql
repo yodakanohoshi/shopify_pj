@@ -1,10 +1,6 @@
 {#
-  注文明細ファクト。1 行 = 1 明細。商品別・カテゴリ別の売上分析に使う。
+  注文明細ファクト。1 行 = 1 明細。商品/カテゴリ別の売上・粗利分析。
 #}
-
-with lines as (
-    select * from {{ ref('int_order_lines__enriched') }}
-)
 
 select
     order_line_id,
@@ -13,6 +9,7 @@ select
     variant_id,
     product_title,
     product_type,
+    category_name,
     vendor,
     sku,
     order_date,
@@ -20,6 +17,9 @@ select
     original_unit_price,
     discounted_unit_price,
     line_discount,
+    unit_cost,
     net_line_revenue,
+    line_cost,
+    gross_margin,
     currency_code
-from lines
+from {{ ref('int_order_lines__enriched') }}

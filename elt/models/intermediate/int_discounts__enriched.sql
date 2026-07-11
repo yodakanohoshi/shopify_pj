@@ -1,5 +1,5 @@
 {#
-  割引に、コード別利用回数の集計と注文適用実績を結合した中間モデル。
+  割引に、コード別利用回数の集計と注文での適用実績を結合した中間モデル。
   fct_discount_performance の素地。
 #}
 
@@ -17,14 +17,20 @@ codes as (
     group by 1
 ),
 
--- 注文側で実際に使われた割引コードの実績 (コード文字列で突合)
-applied as (
+-- 注文側で実際に使われたコード文字列の実績
+order_code_usage as (
+    select discount_code, count(distinct order_dlt_id) as orders_with_code
+    from {{ ref('stg_shopify__order_discount_codes') }}
+    group by 1
+),
+
+-- 割引コード (id 付き) と注文実績を code 文字列で突合
+code_to_orders as (
     select
-        discount_code,
-        count(distinct order_dlt_id)    as orders_with_code,
-        sum(discount_amount)            as applied_amount_total
-    from {{ ref('stg_shopify__order_discount_applications') }}
-    where discount_code is not null
+        dc.discount_dlt_id,
+        sum(coalesce(ocu.orders_with_code, 0)) as orders_with_code
+    from {{ ref('stg_shopify__discount_codes') }} dc
+    left join order_code_usage ocu on dc.discount_code = ocu.discount_code
     group by 1
 )
 
@@ -42,10 +48,9 @@ select
     coalesce(c.code_count, 0)           as code_count,
     coalesce(c.code_usage_total, 0)     as code_usage_total,
     c.sample_code,
-    coalesce(a.orders_with_code, 0)     as orders_with_code,
-    coalesce(a.applied_amount_total, 0) as applied_amount_total,
+    coalesce(cto.orders_with_code, 0)   as orders_with_code,
     d.starts_at,
     d.ends_at
 from discounts d
 left join codes c on d.discount_dlt_id = c.discount_dlt_id
-left join applied a on c.sample_code = a.discount_code
+left join code_to_orders cto on d.discount_dlt_id = cto.discount_dlt_id

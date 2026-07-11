@@ -4,34 +4,56 @@ sources:
   - name: shopify_raw
     description: "dlt が Shopify Admin GraphQL API から投入した raw スキーマ。"
     schema: raw
-    # dlt はネストした配列を `<親>__<子>` の子テーブルへ正規化する。
     tables:
+      # --- Bulk 由来 (子テーブルは parent_id で親の id を参照) ---
       - name: orders
-        description: "注文ヘッダ。金額は *__shop_money__amount に正規化される。"
-        columns:
-          - name: id
-            description: "注文の GraphQL global ID (gid://shopify/Order/...)。"
-            tests: [unique, not_null]
-      - name: orders__line_items
-        description: "注文明細 (orders の子テーブル)。_dlt_parent_id が orders.id を参照。"
-      - name: orders__discount_applications
-        description: "注文に適用された割引 (orders の子テーブル)。"
-      - name: customers
-        description: "顧客。"
+        description: "注文ヘッダ (Bulk)。金額は *__shop_money__amount に正規化。"
         columns:
           - name: id
             tests: [unique, not_null]
+      - name: order_line_items
+        description: "注文明細 (Bulk)。parent_id が orders.id を参照。"
+      - name: orders__discount_codes
+        description: "注文に適用された割引コード文字列 (orders の inline list 子。value 列)。"
       - name: products
-        description: "商品ヘッダ。"
+        description: "商品ヘッダ (Bulk)。category / options を含む。"
         columns:
           - name: id
             tests: [unique, not_null]
-      - name: products__variants
-        description: "商品バリアント (products の子テーブル)。"
+      - name: product_variants
+        description: "商品バリアント (Bulk)。原価 inventory_item__unit_cost を含む。parent_id が products.id を参照。"
+      - name: customers
+        description: "顧客 (Bulk)。default_email_address にメール配信同意を含む。"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+      - name: customer_addresses
+        description: "顧客の住所 (Bulk・addressesV2)。parent_id が customers.id を参照。"
+      - name: collections
+        description: "コレクション (Bulk)。"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+      - name: collection_products
+        description: "コレクション所属商品 (Bulk)。id=商品gid、parent_id=コレクションgid。"
+      - name: abandoned_checkouts
+        description: "放棄チェックアウト (Bulk)。completed_at 非 null は復帰済み。"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+      - name: abandoned_checkout_line_items
+        description: "放棄チェックアウト明細 (Bulk)。parent_id が abandoned_checkouts.id を参照。"
+
+      # --- ページング由来 ---
       - name: discounts
         description: "割引 (discountNodes)。dlt 標準非対応をカスタム取得。discount_type に種別。"
         columns:
           - name: id
             tests: [unique, not_null]
       - name: discounts__codes
-        description: "割引コード (discounts の子テーブル)。code 別の利用回数を含む。"
+        description: "割引コード (discounts の子)。code 別利用回数を含む。"
+      - name: locations
+        description: "ロケーション (在庫/フルフィルメント拠点)。"
+        columns:
+          - name: id
+            tests: [unique, not_null]

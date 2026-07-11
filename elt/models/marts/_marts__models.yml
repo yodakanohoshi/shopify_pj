@@ -2,21 +2,46 @@ version: 2
 
 models:
   - name: dim_customers
-    description: "顧客ディメンション。属性 + 実注文からの集計指標。1 行 = 1 顧客。"
+    description: "顧客ディメンション。属性 + 実注文集計 + 配信同意 + セグメント。1 行 = 1 顧客。"
     columns:
       - name: customer_id
         tests: [unique, not_null]
-      - name: orders_count
-        description: "キャンセルを除く注文数。"
+      - name: customer_segment
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["prospect", "one_time", "repeat", "loyal"]
 
   - name: dim_products
-    description: "商品ディメンション。バリアント価格レンジ・在庫を集約。1 行 = 1 商品。"
+    description: "商品ディメンション。価格レンジ・原価・粗利率・カテゴリ・在庫。1 行 = 1 商品。"
     columns:
       - name: product_id
         tests: [unique, not_null]
 
+  - name: dim_collections
+    description: "コレクションディメンション。1 行 = 1 コレクション。"
+    columns:
+      - name: collection_id
+        tests: [unique, not_null]
+
+  - name: dim_locations
+    description: "ロケーションディメンション。1 行 = 1 拠点。"
+    columns:
+      - name: location_id
+        tests: [unique, not_null]
+
+  - name: product_collections
+    description: "商品×コレクションのブリッジ。1 行 = (コレクション × 商品)。"
+    columns:
+      - name: product_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: product_id
+
   - name: fct_orders
-    description: "注文ファクト。1 行 = 1 注文。売上・AOV 分析の基点。"
+    description: "注文ファクト。1 行 = 1 注文。売上・返金・チャネル・地理。"
     columns:
       - name: order_id
         tests: [unique, not_null]
@@ -31,7 +56,7 @@ models:
                 where: "customer_id is not null"
 
   - name: fct_order_lines
-    description: "注文明細ファクト。1 行 = 1 明細。商品別売上分析。"
+    description: "注文明細ファクト。1 行 = 1 明細。売上・原価・粗利。"
     columns:
       - name: order_line_id
         tests: [unique, not_null]
@@ -43,7 +68,13 @@ models:
                 field: order_id
 
   - name: fct_discount_performance
-    description: "割引パフォーマンスファクト。1 行 = 1 割引。利用・値引き効果を評価。"
+    description: "割引パフォーマンスファクト。1 行 = 1 割引。"
     columns:
       - name: discount_id
+        tests: [unique, not_null]
+
+  - name: fct_abandoned_checkouts
+    description: "放棄チェックアウトファクト。1 行 = 1 チェックアウト。ファネル/復帰分析。"
+    columns:
+      - name: checkout_id
         tests: [unique, not_null]

@@ -2,19 +2,40 @@ version: 2
 
 models:
   - name: int_orders__enriched
-    description: "注文ヘッダ + 明細集計 + 顧客属性。fct_orders の素地。1 行 = 1 注文。"
+    description: "注文 + 明細集計 + 顧客属性 + 返金反映後の純売上。1 行 = 1 注文。"
     columns:
       - name: order_id
         tests: [unique, not_null]
 
   - name: int_order_lines__enriched
-    description: "注文明細 + 注文日 + 商品属性。1 行 = 1 明細。"
+    description: "注文明細 + 商品属性 + 原価/粗利。1 行 = 1 明細。"
     columns:
       - name: order_line_id
         tests: [unique, not_null]
 
+  - name: int_products__enriched
+    description: "商品 + バリアント集計 (価格レンジ/平均原価/在庫)。1 行 = 1 商品。"
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+
+  - name: int_customers__enriched
+    description: "顧客 + 実注文集計 + 配信同意 + セグメント。1 行 = 1 顧客。"
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+
   - name: int_discounts__enriched
-    description: "割引 + コード別利用集計 + 注文適用実績。1 行 = 1 割引。"
+    description: "割引 + コード利用集計 + 注文適用実績。1 行 = 1 割引。"
     columns:
       - name: discount_id
+        tests: [unique, not_null]
+
+  - name: int_product_collections
+    description: "商品×コレクションのブリッジ (名称付与)。1 行 = (コレクション × 商品)。"
+
+  - name: int_abandoned_checkouts__enriched
+    description: "放棄チェックアウト + 明細集計。1 行 = 1 チェックアウト。"
+    columns:
+      - name: checkout_id
         tests: [unique, not_null]
