@@ -11,7 +11,7 @@ with source as (
 )
 
 select
-    id                                          as product_id,
+    {{ parse_gid_id('id') }}                    as product_id,
     legacy_resource_id                          as product_legacy_id,
     title                                       as product_title,
     handle,

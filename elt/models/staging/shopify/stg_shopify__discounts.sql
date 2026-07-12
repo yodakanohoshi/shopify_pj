@@ -18,7 +18,7 @@ with source as (
 )
 
 select
-    id                                          as discount_id,
+    {{ parse_gid_id('id') }}                    as discount_id,
     discount_type,
     case
         when discount_type like 'DiscountCode%'      then 'code'

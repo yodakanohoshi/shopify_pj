@@ -11,7 +11,7 @@ with source as (
 )
 
 select
-    id                                          as fulfillment_id,
+    {{ parse_gid_id('id') }}                    as fulfillment_id,
     _dlt_parent_id                              as order_dlt_id,
     name                                        as fulfillment_name,
     status                                      as fulfillment_status,

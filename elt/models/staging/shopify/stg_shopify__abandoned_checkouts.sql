@@ -23,8 +23,8 @@ with source as (
 )
 
 select
-    id                                                      as checkout_id,
-    customer__id                                            as customer_id,
+    {{ parse_gid_id('id') }}                                as checkout_id,
+    {{ parse_gid_id('customer__id') }}                      as customer_id,
     abandoned_checkout_url,
     note,
     taxes_included,

@@ -8,10 +8,10 @@ with source as (
 )
 
 select
-    id                                                            as order_line_id,
-    parent_id                                                     as order_id,
-    product__id                                                   as product_id,
-    variant__id                                                   as variant_id,
+    {{ parse_gid_id('id') }}                                      as order_line_id,
+    {{ parse_gid_id('parent_id') }}                               as order_id,
+    {{ parse_gid_id('product__id') }}                             as product_id,
+    {{ parse_gid_id('variant__id') }}                             as variant_id,
     title                                                         as product_title,
     sku,
     vendor,

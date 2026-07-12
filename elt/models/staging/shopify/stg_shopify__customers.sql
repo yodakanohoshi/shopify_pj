@@ -13,7 +13,7 @@ with source as (
 )
 
 select
-    id                                              as customer_id,
+    {{ parse_gid_id('id') }}                        as customer_id,
     legacy_resource_id                              as customer_legacy_id,
     first_name,
     last_name,

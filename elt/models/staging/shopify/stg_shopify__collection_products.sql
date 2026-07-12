@@ -9,6 +9,6 @@ with source as (
 )
 
 select
-    parent_id       as collection_id,
-    id              as product_id
+    {{ parse_gid_id('parent_id') }} as collection_id,
+    {{ parse_gid_id('id') }}        as product_id
 from source

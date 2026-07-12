@@ -12,9 +12,9 @@ with source as (
 )
 
 select
-    id                                                      as variant_id,
+    {{ parse_gid_id('id') }}                                as variant_id,
     legacy_resource_id                                      as variant_legacy_id,
-    parent_id                                               as product_id,
+    {{ parse_gid_id('parent_id') }}                         as product_id,
     title                                                   as variant_title,
     display_name                                            as variant_display_name,
     sku,
@@ -25,7 +25,7 @@ select
     taxable,
     inventory_policy,
     -- 在庫アイテム (在庫レベルとの結合キー)
-    inventory_item__id                                      as inventory_item_id,
+    {{ parse_gid_id('inventory_item__id') }}                as inventory_item_id,
     inventory_item__tracked                                 as inventory_tracked,
     inventory_item__requires_shipping                       as requires_shipping,
     -- 原価 (粗利計算に使用)

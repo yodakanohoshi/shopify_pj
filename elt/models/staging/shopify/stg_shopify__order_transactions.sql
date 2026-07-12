@@ -12,7 +12,7 @@ with source as (
 )
 
 select
-    id                                              as transaction_id,
+    {{ parse_gid_id('id') }}                        as transaction_id,
     _dlt_parent_id                                  as order_dlt_id,
     kind                                            as transaction_kind,
     status                                          as transaction_status,

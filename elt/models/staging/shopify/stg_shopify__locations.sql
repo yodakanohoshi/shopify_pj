@@ -22,7 +22,7 @@ with source as (
 )
 
 select
-    id                          as location_id,
+    {{ parse_gid_id('id') }}    as location_id,
     legacy_resource_id          as location_legacy_id,
     name                        as location_name,
     is_active,

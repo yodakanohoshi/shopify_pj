@@ -13,7 +13,7 @@ with source as (
 )
 
 select
-    id                                                      as refund_id,
+    {{ parse_gid_id('id') }}                                as refund_id,
     _dlt_parent_id                                          as order_dlt_id,
     note,
     cast(total_refunded_set__shop_money__amount as double)  as refund_amount,

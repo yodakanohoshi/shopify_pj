@@ -7,7 +7,7 @@ with source as (
 )
 
 select
-    id                              as collection_id,
+    {{ parse_gid_id('id') }}        as collection_id,
     title                           as collection_title,
     handle,
     description                     as collection_description,

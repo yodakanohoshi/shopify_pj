@@ -6,8 +6,8 @@ with source as (
 )
 
 select
-    id                          as address_id,
-    parent_id                   as customer_id,
+    {{ parse_gid_id('id') }}    as address_id,
+    {{ parse_gid_id('parent_id') }} as customer_id,
     city,
     province,
     country,

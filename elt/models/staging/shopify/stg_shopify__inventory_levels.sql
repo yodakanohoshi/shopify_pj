@@ -29,9 +29,11 @@ quantities as (
 )
 
 select
-    l.id            as inventory_level_id,
-    l.parent_id     as location_id,
-    l.item__id      as inventory_item_id,
+    -- InventoryLevel の gid は複合 (末尾に ?inventory_item_id=...) で数値単体では
+    -- 一意にならないため gid のまま保持する。結合キーの location/item は数値化する。
+    l.id                              as inventory_level_id,
+    {{ parse_gid_id('l.parent_id') }} as location_id,
+    {{ parse_gid_id('l.item__id') }}  as inventory_item_id,
     l.item__sku     as sku,
     q.available,
     q.on_hand,

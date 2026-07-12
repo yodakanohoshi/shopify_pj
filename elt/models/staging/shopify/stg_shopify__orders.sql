@@ -22,13 +22,13 @@ with source as (
 )
 
 select
-    -- 識別子
-    id                                              as order_id,
+    -- 識別子 (gid から数値 ID を抽出)
+    {{ parse_gid_id('id') }}                        as order_id,
     legacy_resource_id                              as order_legacy_id,
     name                                            as order_name,
     cast(number as integer)                         as order_number,
     confirmation_number,
-    customer__id                                    as customer_id,
+    {{ parse_gid_id('customer__id') }}              as customer_id,
 
     -- ステータス・チャネル
     display_financial_status                        as financial_status,
