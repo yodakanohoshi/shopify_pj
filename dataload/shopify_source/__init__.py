@@ -66,7 +66,7 @@ def shopify_source(
     access_token: str | None = None,
     client_id: str | None = None,
     client_secret: str | None = None,
-    api_version: str = "2025-01",
+    api_version: str = "2026-07",
     page_size: int = 100,
     start_date: str | None = None,
     end_date: str | None = None,
