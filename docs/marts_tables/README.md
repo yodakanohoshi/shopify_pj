@@ -11,6 +11,10 @@
 | product_collections | bridge | [product_collections.md](product_collections.md) |
 | fct_orders | fct | [fct_orders.md](fct_orders.md) |
 | fct_order_lines | fct | [fct_order_lines.md](fct_order_lines.md) |
+| fct_refunds | fct | [fct_refunds.md](fct_refunds.md) |
+| fct_fulfillments | fct | [fct_fulfillments.md](fct_fulfillments.md) |
+| fct_order_transactions | fct | [fct_order_transactions.md](fct_order_transactions.md) |
+| fct_inventory_levels | fct | [fct_inventory_levels.md](fct_inventory_levels.md) |
 | fct_discount_performance | fct | [fct_discount_performance.md](fct_discount_performance.md) |
 | fct_abandoned_checkouts | fct | [fct_abandoned_checkouts.md](fct_abandoned_checkouts.md) |
 

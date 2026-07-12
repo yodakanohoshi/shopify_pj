@@ -11,6 +11,9 @@
 | メール配信同意状態 | email_marketing_state | varchar | 配信同意状態 |
 | 顧客状態 | customer_state | varchar | 顧客状態 |
 | 顧客セグメント | customer_segment | varchar | prospect / one_time / repeat / loyal |
+| 免税フラグ | tax_exempt | boolean | 注文で課税免除されるか |
+| 顧客ロケール | customer_locale | varchar | 顧客の言語/地域設定 |
+| 登録経過期間 | lifetime_duration | varchar | 初回登録からの経過 (例 about 2 years) |
 | 国 / 国コード / 市区町村 | country / country_code / city | varchar | 所在地 |
 | 生涯購入額 | lifetime_amount_spent | double | 生涯購入額 (API 値) |
 | 注文数 / 売上合計 / 平均注文額 | orders_count / revenue_total / avg_order_value | integer / double | 実注文集計 (キャンセル除く) |

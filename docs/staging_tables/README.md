@@ -8,6 +8,9 @@ raw を 1:1 でクレンジング (型付け・リネーム・金額の数値化
 | stg_shopify__orders | orders | [stg_shopify__orders.md](stg_shopify__orders.md) |
 | stg_shopify__order_lines | order_line_items | [stg_shopify__order_lines.md](stg_shopify__order_lines.md) |
 | stg_shopify__order_discount_codes | orders__discount_codes | [stg_shopify__order_discount_codes.md](stg_shopify__order_discount_codes.md) |
+| stg_shopify__order_refunds | orders__refunds | [stg_shopify__order_refunds.md](stg_shopify__order_refunds.md) |
+| stg_shopify__fulfillments | orders__fulfillments | [stg_shopify__fulfillments.md](stg_shopify__fulfillments.md) |
+| stg_shopify__order_transactions | orders__transactions | [stg_shopify__order_transactions.md](stg_shopify__order_transactions.md) |
 | stg_shopify__customers | customers | [stg_shopify__customers.md](stg_shopify__customers.md) |
 | stg_shopify__customer_addresses | customer_addresses | [stg_shopify__customer_addresses.md](stg_shopify__customer_addresses.md) |
 | stg_shopify__products | products | [stg_shopify__products.md](stg_shopify__products.md) |
@@ -19,3 +22,4 @@ raw を 1:1 でクレンジング (型付け・リネーム・金額の数値化
 | stg_shopify__discounts | discounts | [stg_shopify__discounts.md](stg_shopify__discounts.md) |
 | stg_shopify__discount_codes | discounts__codes | [stg_shopify__discount_codes.md](stg_shopify__discount_codes.md) |
 | stg_shopify__locations | locations | [stg_shopify__locations.md](stg_shopify__locations.md) |
+| stg_shopify__inventory_levels | inventory_levels | [stg_shopify__inventory_levels.md](stg_shopify__inventory_levels.md) |

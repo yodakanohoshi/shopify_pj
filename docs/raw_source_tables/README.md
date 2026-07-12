@@ -8,6 +8,10 @@ dlt が Shopify Admin GraphQL API から投入する生データ。列名 snake_
 | orders | Bulk | — | [orders.md](orders.md) |
 | order_line_items | Bulk | orders | [order_line_items.md](order_line_items.md) |
 | orders__discount_codes | Bulk (inline list) | orders | [orders__discount_codes.md](orders__discount_codes.md) |
+| orders__payment_gateway_names | Bulk (inline list) | orders | [orders__payment_gateway_names.md](orders__payment_gateway_names.md) |
+| orders__refunds | Bulk (inline list) | orders | [orders__refunds.md](orders__refunds.md) |
+| orders__fulfillments | Bulk (inline list) | orders | [orders__fulfillments.md](orders__fulfillments.md) |
+| orders__transactions | Bulk (inline list) | orders | [orders__transactions.md](orders__transactions.md) |
 | products | Bulk | — | [products.md](products.md) |
 | product_variants | Bulk | products | [product_variants.md](product_variants.md) |
 | customers | Bulk | — | [customers.md](customers.md) |
@@ -16,9 +20,12 @@ dlt が Shopify Admin GraphQL API から投入する生データ。列名 snake_
 | collection_products | Bulk | collections | [collection_products.md](collection_products.md) |
 | abandoned_checkouts | Bulk | — | [abandoned_checkouts.md](abandoned_checkouts.md) |
 | abandoned_checkout_line_items | Bulk | abandoned_checkouts | [abandoned_checkout_line_items.md](abandoned_checkout_line_items.md) |
+| abandoned_checkouts__discount_codes | Bulk (inline list) | abandoned_checkouts | [abandoned_checkouts__discount_codes.md](abandoned_checkouts__discount_codes.md) |
 | discounts | ページング | — | [discounts.md](discounts.md) |
 | discounts__codes | ページング (子) | discounts | [discounts__codes.md](discounts__codes.md) |
 | locations | ページング | — | [locations.md](locations.md) |
+| inventory_levels | Bulk | locations | [inventory_levels.md](inventory_levels.md) |
+| inventory_levels__quantities | Bulk (inline list) | inventory_levels | [inventory_levels__quantities.md](inventory_levels__quantities.md) |
 
 ## 取得モードと書き込み方式
 
@@ -35,10 +42,14 @@ dlt が Shopify Admin GraphQL API から投入する生データ。列名 snake_
 
 | 取得方式 | 対象 | 書き込み | 主キー |
 |---|---|---|---|
-| Bulk | orders / products / customers / collections / abandoned_checkouts と各子テーブル | `merge` (差分 upsert) | `id` |
+| Bulk | orders / products / customers / collections / abandoned_checkouts と各子テーブル (orders の inline 子 refunds / fulfillments / transactions / payment_gateway_names を含む) | `merge` (差分 upsert) | `id` |
+| Bulk | inventory_levels と inventory_levels__quantities | `replace` (毎回全件洗い替え) | `id` |
 | ページング | discounts / locations | `replace` (毎回全件洗い替え) | `id` |
 
+> orders の新しい inline 子テーブル (refunds / fulfillments / transactions) は Bulk の
+> `orders` エクスポートに同梱され、親と同じく `merge` で差分 upsert される。
 > discounts / locations は件数が少なく変動も小さいため差分に載せず、毎回 `replace` する。
+> inventory_levels は Bulk 取得だが在庫スナップショットの性質上、毎回全件を `replace` で洗い替える。
 > `merge` は差分 upsert のため、親から取り除かれた子行 (削除された注文明細、コレクション
 > 非所属化など) は残る。厳密に整合させたいときは全期間バックフィルで取り直す。
 

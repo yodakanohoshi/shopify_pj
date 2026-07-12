@@ -18,10 +18,10 @@ marts        ← marts_tables/      ← BI / 分析はここを参照
 
 | ディレクトリ | スキーマ | 生成 | テーブル数 |
 |---|---|---|---|
-| [`raw_source_tables/`](raw_source_tables/) | `raw` | dlt | 14 |
-| [`staging_tables/`](staging_tables/) | `staging` | dbt (view) | 14 |
+| [`raw_source_tables/`](raw_source_tables/) | `raw` | dlt | 21 |
+| [`staging_tables/`](staging_tables/) | `staging` | dbt (view) | 18 |
 | [`intermediate_tables/`](intermediate_tables/) | `intermediate` | dbt (view) | 7 |
-| [`marts_tables/`](marts_tables/) | `marts` | dbt (table) | 9 |
+| [`marts_tables/`](marts_tables/) | `marts` | dbt (table) | 13 |
 
 各ディレクトリの `README.md` に、そのレイヤのテーブル一覧と ER 概要を置く。
 

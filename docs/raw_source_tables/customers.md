@@ -15,6 +15,11 @@
 | 電話番号 | default_phone_number__phone_number | varchar | 電話番号 |
 | メール確認済み | verified_email | boolean | メール確認済みか |
 | 顧客状態 | state | varchar | 顧客状態 (ENABLED, DISABLED 等) |
+| 免税フラグ | tax_exempt | boolean | 注文で課税免除されるか |
+| ロケール | locale | varchar | 顧客の言語/地域設定 |
+| 登録経過期間 | lifetime_duration | varchar | 初回登録からの経過 (例 about 2 years) |
+| 削除可否 | can_delete | boolean | 顧客を削除できるか |
+| データ販売拒否 | data_sale_opt_out | boolean | データ販売をオプトアウト済か |
 | 注文数 | number_of_orders | bigint | 注文数 (API 集計値) |
 | 生涯購入額 / 通貨コード | amount_spent__amount / __currency_code | varchar | 生涯購入額 / 通貨 |
 | タグ | tags | (子: customers__tags) | タグ (inline list) |
