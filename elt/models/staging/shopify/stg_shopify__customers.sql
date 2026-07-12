@@ -1,5 +1,15 @@
 with source as (
-    select * from {{ source('shopify_raw', 'customers') }}
+    {{ raw_source(source('shopify_raw', 'customers'), [
+        'id', 'legacy_resource_id', 'first_name', 'last_name',
+        'default_email_address__email_address', 'default_phone_number__phone_number',
+        'default_email_address__marketing_state', 'default_email_address__marketing_opt_in_level',
+        'verified_email', 'state', 'tax_exempt', 'locale', 'lifetime_duration',
+        'can_delete', 'data_sale_opt_out', 'number_of_orders',
+        'amount_spent__amount', 'amount_spent__currency_code',
+        'default_address__city', 'default_address__province', 'default_address__country',
+        'default_address__country_code_v2', 'default_address__zip',
+        'note', 'created_at', 'updated_at'
+    ]) }}
 )
 
 select

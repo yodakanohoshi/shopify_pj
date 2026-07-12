@@ -4,7 +4,10 @@
   stg_shopify__orders.order_dlt_id に紐づく。1 行 = 1 出荷。
 #}
 with source as (
-    select * from {{ source('shopify_raw', 'orders__fulfillments') }}
+    {{ raw_source(source('shopify_raw', 'orders__fulfillments'), [
+        'id', '_dlt_parent_id', 'name', 'status', 'display_status', 'total_quantity',
+        'created_at', 'updated_at', 'estimated_delivery_at', 'in_transit_at', 'delivered_at'
+    ]) }}
 )
 
 select

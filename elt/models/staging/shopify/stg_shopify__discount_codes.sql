@@ -1,5 +1,10 @@
 with source as (
-    select * from {{ source('shopify_raw', 'discounts__codes') }}
+    {{ raw_source(source('shopify_raw', 'discounts__codes'), [
+        'id',
+        '_dlt_parent_id',
+        'code',
+        'async_usage_count'
+    ]) }}
 )
 
 select

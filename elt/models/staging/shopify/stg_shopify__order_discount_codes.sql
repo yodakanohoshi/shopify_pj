@@ -4,7 +4,9 @@
   order_dlt_id で stg_shopify__orders.order_dlt_id に紐づく。
 #}
 with source as (
-    select * from {{ source('shopify_raw', 'orders__discount_codes') }}
+    {{ raw_source(source('shopify_raw', 'orders__discount_codes'), [
+        '_dlt_parent_id', 'value'
+    ]) }}
 )
 
 select

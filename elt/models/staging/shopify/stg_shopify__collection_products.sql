@@ -3,7 +3,9 @@
   id=商品gid、parent_id=コレクションgid。
 #}
 with source as (
-    select * from {{ source('shopify_raw', 'collection_products') }}
+    {{ raw_source(source('shopify_raw', 'collection_products'), [
+        'parent_id', 'id'
+    ]) }}
 )
 
 select

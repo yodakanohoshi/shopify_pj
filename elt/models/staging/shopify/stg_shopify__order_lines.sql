@@ -1,5 +1,10 @@
 with source as (
-    select * from {{ source('shopify_raw', 'order_line_items') }}
+    {{ raw_source(source('shopify_raw', 'order_line_items'), [
+        'id', 'parent_id', 'product__id', 'variant__id', 'title', 'sku', 'vendor',
+        'quantity', 'original_unit_price_set__shop_money__amount',
+        'discounted_unit_price_set__shop_money__amount',
+        'total_discount_set__shop_money__amount'
+    ]) }}
 )
 
 select

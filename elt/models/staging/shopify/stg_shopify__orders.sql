@@ -1,5 +1,24 @@
 with source as (
-    select * from {{ source('shopify_raw', 'orders') }}
+    {{ raw_source(source('shopify_raw', 'orders'), [
+        'id', 'legacy_resource_id', 'name', 'number', 'confirmation_number', 'customer__id',
+        'display_financial_status', 'display_fulfillment_status', 'cancel_reason', 'closed',
+        'test', 'taxes_included', 'tax_exempt', 'currency_code', 'source_name', 'po_number',
+        'customer_locale', 'customer_accepts_marketing', 'fulfillments_count__count',
+        'email', 'phone', 'note',
+        'shipping_address__city', 'shipping_address__province', 'shipping_address__country',
+        'shipping_address__country_code_v2', 'shipping_address__zip',
+        'billing_address__city', 'billing_address__province', 'billing_address__country',
+        'billing_address__country_code_v2', 'billing_address__zip',
+        'billing_address_matches_shipping_address',
+        'subtotal_line_items_quantity', 'current_subtotal_line_items_quantity', 'current_total_weight',
+        'total_price_set__shop_money__amount', 'subtotal_price_set__shop_money__amount',
+        'total_tax_set__shop_money__amount', 'total_discounts_set__shop_money__amount',
+        'total_shipping_price_set__shop_money__amount', 'current_total_price_set__shop_money__amount',
+        'current_subtotal_price_set__shop_money__amount', 'current_total_tax_set__shop_money__amount',
+        'current_total_discounts_set__shop_money__amount', 'total_refunded_set__shop_money__amount',
+        'net_payment_set__shop_money__amount',
+        'created_at', 'updated_at', 'processed_at', 'cancelled_at', 'closed_at', '_dlt_id'
+    ]) }}
 )
 
 select

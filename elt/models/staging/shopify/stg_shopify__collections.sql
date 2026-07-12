@@ -1,5 +1,9 @@
 with source as (
-    select * from {{ source('shopify_raw', 'collections') }}
+    {{ raw_source(source('shopify_raw', 'collections'), [
+        'id', 'title', 'handle', 'description', 'template_suffix',
+        'sort_order', 'seo__title', 'seo__description',
+        'products_count__count', 'updated_at'
+    ]) }}
 )
 
 select

@@ -1,5 +1,25 @@
 with source as (
-    select * from {{ source('shopify_raw', 'abandoned_checkouts') }}
+    {{ raw_source(source('shopify_raw', 'abandoned_checkouts'), [
+        'id',
+        'customer__id',
+        'abandoned_checkout_url',
+        'note',
+        'taxes_included',
+        'total_price_set__shop_money__amount',
+        'total_price_set__shop_money__currency_code',
+        'subtotal_price_set__shop_money__amount',
+        'total_line_items_price_set__shop_money__amount',
+        'total_tax_set__shop_money__amount',
+        'total_discount_set__shop_money__amount',
+        'shipping_address__city',
+        'shipping_address__country',
+        'billing_address__city',
+        'billing_address__country',
+        'created_at',
+        'updated_at',
+        'completed_at',
+        '_dlt_id'
+    ]) }}
 )
 
 select

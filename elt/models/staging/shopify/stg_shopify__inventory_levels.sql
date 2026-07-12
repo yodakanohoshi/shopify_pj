@@ -6,7 +6,15 @@
   stg_shopify__product_variants.inventory_item_id に紐づく。1 行 = (ロケーション × 在庫アイテム)。
 #}
 with levels as (
-    select * from {{ source('shopify_raw', 'inventory_levels') }}
+    {{ raw_source(source('shopify_raw', 'inventory_levels'), [
+        'id', 'parent_id', 'item__id', 'item__sku', '_dlt_id'
+    ]) }}
+),
+
+quantities_raw as (
+    {{ raw_source(source('shopify_raw', 'inventory_levels__quantities'), [
+        '_dlt_parent_id', 'name', 'quantity'
+    ]) }}
 ),
 
 quantities as (
@@ -16,7 +24,7 @@ quantities as (
         max(case when name = 'on_hand'   then cast(quantity as integer) end) as on_hand,
         max(case when name = 'committed' then cast(quantity as integer) end) as committed,
         max(case when name = 'incoming'  then cast(quantity as integer) end) as incoming
-    from {{ source('shopify_raw', 'inventory_levels__quantities') }}
+    from quantities_raw
     group by 1
 )
 

@@ -4,13 +4,12 @@ sources:
   - name: shopify_raw
     description: "dlt が Shopify Admin GraphQL API から投入した raw スキーマ。"
     schema: raw
+    # id の一意性/非 null は各 stg モデルの PK テスト (常に存在する view) で担保する。
+    # ソース側テストはスパースな実データで対象テーブルが未生成のとき落ちるため置かない。
     tables:
       # --- Bulk 由来 (子テーブルは parent_id で親の id を参照) ---
       - name: orders
         description: "注文ヘッダ (Bulk)。金額は *__shop_money__amount に正規化。"
-        columns:
-          - name: id
-            tests: [unique, not_null]
       - name: order_line_items
         description: "注文明細 (Bulk)。parent_id が orders.id を参照。"
       - name: orders__discount_codes
@@ -23,50 +22,29 @@ sources:
         description: "注文の決済取引 (orders の inline list 子)。_dlt_parent_id が orders._dlt_id を参照。"
       - name: products
         description: "商品ヘッダ (Bulk)。category / options を含む。"
-        columns:
-          - name: id
-            tests: [unique, not_null]
       - name: product_variants
         description: "商品バリアント (Bulk)。原価 inventory_item__unit_cost を含む。parent_id が products.id を参照。"
       - name: customers
         description: "顧客 (Bulk)。default_email_address にメール配信同意を含む。"
-        columns:
-          - name: id
-            tests: [unique, not_null]
       - name: customer_addresses
         description: "顧客の住所 (Bulk・addressesV2)。parent_id が customers.id を参照。"
       - name: collections
         description: "コレクション (Bulk)。"
-        columns:
-          - name: id
-            tests: [unique, not_null]
       - name: collection_products
         description: "コレクション所属商品 (Bulk)。id=商品gid、parent_id=コレクションgid。"
       - name: abandoned_checkouts
         description: "放棄チェックアウト (Bulk)。completed_at 非 null は復帰済み。"
-        columns:
-          - name: id
-            tests: [unique, not_null]
       - name: abandoned_checkout_line_items
         description: "放棄チェックアウト明細 (Bulk)。parent_id が abandoned_checkouts.id を参照。"
 
       # --- ページング由来 ---
       - name: discounts
         description: "割引 (discountNodes)。dlt 標準非対応をカスタム取得。discount_type に種別。"
-        columns:
-          - name: id
-            tests: [unique, not_null]
       - name: discounts__codes
         description: "割引コード (discounts の子)。code 別利用回数を含む。"
       - name: locations
         description: "ロケーション (在庫/フルフィルメント拠点)。"
-        columns:
-          - name: id
-            tests: [unique, not_null]
       - name: inventory_levels
         description: "在庫レベル (Bulk・locations → inventoryLevels)。parent_id=ロケーションgid、item__id=在庫アイテムgid。"
-        columns:
-          - name: id
-            tests: [unique, not_null]
       - name: inventory_levels__quantities
         description: "在庫数の name/quantity ペア (inventory_levels の inline list 子)。_dlt_parent_id が inventory_levels._dlt_id を参照。"

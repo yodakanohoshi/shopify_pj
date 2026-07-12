@@ -1,5 +1,8 @@
 with source as (
-    select * from {{ source('shopify_raw', 'customer_addresses') }}
+    {{ raw_source(source('shopify_raw', 'customer_addresses'), [
+        'id', 'parent_id', 'city', 'province', 'country',
+        'country_code_v2', 'zip'
+    ]) }}
 )
 
 select

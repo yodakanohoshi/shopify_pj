@@ -4,7 +4,11 @@
   に紐づく。1 行 = 1 取引 (authorization / capture / refund / sale 等)。
 #}
 with source as (
-    select * from {{ source('shopify_raw', 'orders__transactions') }}
+    {{ raw_source(source('shopify_raw', 'orders__transactions'), [
+        'id', '_dlt_parent_id', 'kind', 'status', 'gateway', 'test',
+        'amount_set__shop_money__amount', 'amount_set__shop_money__currency_code',
+        'created_at', 'processed_at'
+    ]) }}
 )
 
 select

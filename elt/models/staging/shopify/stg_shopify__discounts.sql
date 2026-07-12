@@ -1,5 +1,20 @@
 with source as (
-    select * from {{ source('shopify_raw', 'discounts') }}
+    {{ raw_source(source('shopify_raw', 'discounts'), [
+        'id',
+        'discount_type',
+        'title',
+        'status',
+        'summary',
+        'usage_limit',
+        'applies_once_per_customer',
+        'async_usage_count',
+        'customer_gets__value__percentage',
+        'customer_gets__value__amount__amount',
+        'customer_gets__value__amount__currency_code',
+        'starts_at',
+        'ends_at',
+        '_dlt_id'
+    ]) }}
 )
 
 select

@@ -4,7 +4,12 @@
   1 行 = 1 返金。
 #}
 with source as (
-    select * from {{ source('shopify_raw', 'orders__refunds') }}
+    {{ raw_source(source('shopify_raw', 'orders__refunds'), [
+        'id', '_dlt_parent_id', 'note',
+        'total_refunded_set__shop_money__amount',
+        'total_refunded_set__shop_money__currency_code',
+        'created_at', 'processed_at'
+    ]) }}
 )
 
 select

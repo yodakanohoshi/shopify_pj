@@ -1,5 +1,13 @@
 with source as (
-    select * from {{ source('shopify_raw', 'products') }}
+    {{ raw_source(source('shopify_raw', 'products'), [
+        'id', 'legacy_resource_id', 'title', 'handle', 'description',
+        'product_type', 'vendor', 'status', 'template_suffix', 'online_store_url',
+        'is_gift_card', 'tracks_inventory', 'has_only_default_variant', 'requires_selling_plan',
+        'category__id', 'category__name', 'category__full_name',
+        'seo__title', 'seo__description',
+        'variants_count__count', 'total_inventory',
+        'created_at', 'updated_at', 'published_at'
+    ]) }}
 )
 
 select

@@ -1,5 +1,12 @@
 with source as (
-    select * from {{ source('shopify_raw', 'abandoned_checkout_line_items') }}
+    {{ raw_source(source('shopify_raw', 'abandoned_checkout_line_items'), [
+        'id',
+        'parent_id',
+        'product__id',
+        'variant__id',
+        'title',
+        'quantity'
+    ]) }}
 )
 
 select
