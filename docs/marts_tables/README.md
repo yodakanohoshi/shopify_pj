@@ -18,13 +18,40 @@
 | fct_discount_performance | fct | [fct_discount_performance.md](fct_discount_performance.md) |
 | fct_abandoned_checkouts | fct | [fct_abandoned_checkouts.md](fct_abandoned_checkouts.md) |
 
-## ER 概要
+## ER 図
 
+marts の dim (マスタ) と fct (イベント/明細)・bridge の結合関係。ラベルは結合キー列。
+
+```mermaid
+erDiagram
+    dim_customers ||--o{ fct_orders             : "customer_id"
+    dim_customers ||--o{ fct_refunds            : "customer_id"
+    dim_customers ||--o{ fct_fulfillments       : "customer_id"
+    dim_customers ||--o{ fct_order_transactions : "customer_id"
+    dim_customers ||--o{ fct_abandoned_checkouts: "customer_id"
+
+    fct_orders ||--o{ fct_order_lines        : "order_id"
+    fct_orders ||--o{ fct_refunds            : "order_id"
+    fct_orders ||--o{ fct_fulfillments       : "order_id"
+    fct_orders ||--o{ fct_order_transactions : "order_id"
+
+    dim_products ||--o{ fct_order_lines      : "product_id"
+    dim_products ||--o{ fct_inventory_levels : "product_id"
+    dim_products ||--o{ product_collections  : "product_id"
+    dim_collections ||--o{ product_collections : "collection_id"
+
+    dim_locations ||--o{ fct_inventory_levels : "location_id"
 ```
-dim_customers ──< fct_orders ──< fct_order_lines >── dim_products ──< product_collections >── dim_collections
-                                                          │
-fct_discount_performance   fct_abandoned_checkouts   dim_locations
-```
+
+> カーソル記法: `||` = ちょうど1、`o{` = 0以上(多)。dim が親 (1)、fct/bridge が子 (多)。
+>
+> **`fct_discount_performance`** は上図に線を持たない独立ファクト。割引は注文に
+> コード文字列 (`discountCodes`) として適用されるだけで直接の FK が無いため、
+> 分析ではコード一致で `fct_orders` と突き合わせる (詳細は
+> [fct_discount_performance.md](fct_discount_performance.md))。
+>
+> スター構成: 中心の `fct_orders` / `fct_order_lines` を `dim_customers` /
+> `dim_products` / `dim_collections` / `dim_locations` が取り囲む。
 
 ## 分析クエリ例
 
