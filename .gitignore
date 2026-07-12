@@ -1,3 +1,6 @@
+# API 仕様書 (参照専用・巨大なため git 管理外)
+shopify_api/
+
 # Python / uv
 .venv/
 __pycache__/
