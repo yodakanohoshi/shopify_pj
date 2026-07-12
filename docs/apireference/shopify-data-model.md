@@ -44,6 +44,69 @@ erDiagram
 > カーソル記法: `||` = ちょうど1、`o{` = 0以上(多)、`|{` = 1以上。
 > `}o--o{` は多対多。実線は必須リレーション、`o` 側は任意 (null 可)。
 
+## Shopify の運用フローと考え方
+
+Shopify のデータモデルは、ストアの**実運用の流れ**をほぼそのまま写している。各オブジェクトが
+管理画面 (Admin) のどの操作に対応するかを押さえると、テーブル設計の意図が読みやすくなる。
+
+### ストア運営のライフサイクル
+
+1. **商品を登録する** (Product / ProductVariant)
+   管理画面「商品」で商品を作り、色・サイズなどの選択肢 (options) の組み合わせからバリアントが
+   生成される。1商品につき最低1バリアント (既定バリアント) が必ず存在する。SKU・バーコード (JAN)・
+   価格・原価は**バリアント単位**で持つ。→ 分析の最小単位は「商品」ではなく「バリアント」になる。
+
+2. **在庫を置く** (InventoryItem / InventoryLevel / Location)
+   各バリアントは1つの InventoryItem に対応し、その在庫は Location (倉庫・店舗) ごとに
+   InventoryLevel として分かれて記録される。在庫追跡 (`tracked`) を切ると数量は管理されない。
+   `available` (販売可能) = `on_hand` (実在庫) − `committed` (引当済) が基本の関係。
+
+3. **商品を束ねる・公開する** (Collection)
+   コレクションで商品をグルーピングし販売導線を作る。**手動**コレクション (商品を直接指定) と
+   **自動**コレクション (タグ・価格などのルールで自動所属) がある。1商品は複数コレクションに属し得る。
+
+4. **集客し、カゴに入る** (AbandonedCheckout)
+   チェックアウトを開始したが未完了のものが放棄チェックアウト (カゴ落ち)。完了すると Order に
+   変わり `completedAt` が入る。カゴ落ち→復帰の分析やリカバリーメールの母数になる。
+
+5. **注文が成立する** (Order / LineItem)
+   チェックアウト完了・POS 会計・下書き注文 (draft order) の確定などで Order が生まれる。
+   購入された各行が LineItem。注文は「支払」と「配送」の**2軸の状態**
+   (`displayFinancialStatus` / `displayFulfillmentStatus`) を独立して進む。
+
+6. **支払を処理する** (OrderTransaction)
+   決済は authorization (与信) → capture (確定) の2段階が基本で、両方を一度に行うのが sale。
+   返金は refund、与信取り消しは void。1注文に複数の取引がぶら下がる。
+
+7. **出荷する** (Fulfillment)
+   在庫を引き当てて出荷する。追跡番号・配達状況を持つ。複数ロケーションからの分割出荷では
+   1注文に複数 Fulfillment が付く。
+
+8. **返品・返金する** (Refund)
+   全額/一部の返金があり、注文の `current*` 金額と `totalRefundedSet` に反映される。
+   受注時の `total*` は不変なので、実績は必ず `current*` 系で見る。
+
+9. **顧客として蓄積する** (Customer)
+   注文はゲスト (customer=null) でも成立する。会員は Customer に紐づき、`amountSpent` /
+   `numberOfOrders` は Shopify 側が集計した生涯値。メール配信可否は `marketingState` で管理する。
+
+### モデリング上の考え方 (分析での勘所)
+
+- **状態は2軸で持つ**: 支払 (financial) と配送 (fulfillment) は独立。「入金済みだが未出荷」も普通に起きる。
+  片方の状態だけで「完了」を判定しないこと。
+- **`total*` と `current*` を混同しない**: 前者は受注時のスナップショット、後者は返品・注文編集の
+  反映後。売上・粗利などの KPI は `current*` / `net*` 系を使う。
+- **金額は文字列で返る**: API は `MoneyBag.shopMoney.amount` を文字列で返す。丸めや通貨を保ったまま
+  取り込み、staging で `double` 化する。通貨は原則ストア通貨 (`shopMoney`)。
+- **タグは運用の自由記述**: merchant がセグメント抽出や自動化 (Shopify Flow) のために自由に付ける。
+  scalar リストなので子テーブルに割れる。表記ゆれ (全角/半角・大文字小文字) が起きやすく、
+  集計前の正規化を検討する。
+- **gid が正の ID**: すべての ID は `gid://shopify/<Type>/<n>`。`legacyResourceId` は REST 時代の
+  数値 ID で gid 末尾の数値に一致する。本基盤は gid から数値部分を文字列抽出して結合キーにする。
+- **削除・非所属化に注意**: 商品削除で LineItem の `product` / `variant` は null になり得る。
+  差分 (merge) 取得では親から外れた子行が残るため、厳密な整合はバックフィルで取り直す。
+- **60日の壁**: 注文は既定で過去60日しか参照できない。全期間取得には `read_all_orders` スコープが要る。
+
 ## 主なリソース
 
 各リソースの主要フィールドを「説明」と「例」つきで示す。**太字**は分析でよく使う列。
@@ -83,6 +146,12 @@ erDiagram
 
 > 既定では過去60日以内の注文のみ参照可。全期間は `read_all_orders` スコープが必要。
 
+**実務メモ**: 注文は online store のチェックアウトだけでなく、実店舗の POS 会計、Admin で作る
+下書き注文 (draft order) の確定、外部アプリ経由でも生まれる (`sourceName` で判別)。
+Bogus Gateway 等で作ったテスト注文は `test = true` になるので集計から除外する。注文編集
+(商品追加・数量変更) や部分キャンセルをすると受注時の `total*` はそのままで `current*` だけが動く。
+「売れた瞬間」を表すのは `createdAt` ではなく会計成立の `processedAt`。日次売上はこちらで束ねる。
+
 ### LineItem (注文明細) — [doc](https://shopify.dev/docs/api/admin-graphql/latest/objects/LineItem)
 
 注文内の1商品行。粒度は (注文 × 明細)。`product` / `variant` は削除済み商品で null になり得る。
@@ -98,6 +167,11 @@ erDiagram
 | **originalUnitPriceSet** | MoneyBag | 割引前の単価 | `"1500.00"` |
 | discountedUnitPriceSet | MoneyBag | 明細割引を按分した実質単価 | `"1350.00"` |
 | totalDiscountSet | MoneyBag | この明細への割引額合計 | `"300.00"` |
+
+**実務メモ**: 注文レベルの割引 (クーポン等) は各明細へ按分されて `discountedUnitPriceSet` /
+`totalDiscountSet` に落ちる。純売上を明細粒度で出すなら「(単価 × 数量) − 明細割引」を積み上げる。
+原価は LineItem に持たないため、粗利は `variant.inventoryItem.unitCost` を結合して算出する
+(本基盤では `fct_order_lines` がこの結合を担う)。返品分は Refund 側で相殺する。
 
 ### Refund / Fulfillment / OrderTransaction (注文の子)
 
@@ -132,6 +206,11 @@ erDiagram
 | gateway | String | 決済ゲートウェイ | `shopify_payments` |
 | **amountSet** | MoneyBag | 取引金額 | `"3300.00"` |
 
+**実務メモ**: 手動キャプチャ設定のストアでは authorization (与信) だけ先に立ち、出荷時に
+capture (確定) する運用がある。実入金は `SUCCESS` かつ `sale` / `capture` の合計で見る
+(`authorization` は入金ではない)。決済手数料は取引には含まれないため、正確な入金は Shopify Payments の
+Payouts など別ソースで補完する。`gateway` 別に売上を割ると決済手段のミックスが分かる。
+
 ### Customer (顧客) — [doc](https://shopify.dev/docs/api/admin-graphql/latest/objects/Customer)
 
 顧客マスタ。メール配信同意は `defaultEmailAddress.marketingState` に入る。
@@ -154,6 +233,12 @@ erDiagram
 | verifiedEmail | Boolean | メール確認済みか | `true` |
 | **tags** | [String!] | 顧客タグ (子テーブル `customers__tags`) | `["vip", "wholesale"]` |
 | defaultAddress | MailingAddress | 既定住所 (city/province/country/zip) | `{ city: "渋谷区", country: "Japan" }` |
+
+**実務メモ**: `amountSpent` / `numberOfOrders` は Shopify が集計した生涯値で、キャンセルや
+テスト注文の扱いが自前集計とずれることがある。厳密な LTV は `fct_orders` から再計算するのが安全。
+メール配信は改正個人情報保護法/GDPR の観点から `marketingState = SUBSCRIBED` のみを配信母数にする
+(オプトイン取得済みでも解除は尊重)。顧客はゲスト購入だと作られないため、注文の顧客紐付けは欠損があり得る。
+同一人物が複数アカウントになる名寄せ問題もあるため、分析ではメール等での統合を検討する。
 
 ### Product / ProductVariant / InventoryItem
 
@@ -195,6 +280,12 @@ erDiagram
 | requiresShipping | Boolean | 配送が必要か | `true` |
 | measurement.weight | Weight | 重量 (value/unit) | `{ value: 180, unit: GRAMS }` |
 
+**実務メモ**: 商品はまず options (色・サイズ等) を定義し、その組み合わせがバリアントになる。
+オプション無しの商品にも既定バリアント (`Default Title`) が1つでき、`hasOnlyDefaultVariant = true`。
+SKU・バーコード・価格・原価はすべてバリアント/InventoryItem 側にあるため、商品粒度の集計では
+「代表値」か「一覧 (本基盤の `sku_list` / `jan_list`)」に畳む。`status` は ACTIVE のみが販売中で、
+DRAFT/ARCHIVED は売り場に出ない。バリアント数には上限があり、多いと Bulk 取得が重くなる。
+
 ### Location / InventoryLevel
 
 **Location (拠点)** — [doc](https://shopify.dev/docs/api/admin-graphql/latest/objects/Location)
@@ -218,6 +309,12 @@ erDiagram
 > `quantities` の name は `available` (販売可能) / `on_hand` (実在庫) /
 > `committed` (引当済) / `incoming` (入荷予定)。
 
+**実務メモ**: 在庫はロケーション×在庫アイテムの交点で持つため、同じバリアントでも倉庫が違えば別行。
+店舗横断の在庫は `available` を合算する。注文が入ると `committed` が増え `available` が減る (`on_hand` は
+出荷まで不変)。在庫追跡を切った商品 (`tracked = false`) は数量を持たず、常に販売可能として扱われる。
+InventoryLevel の gid は複合キー (`?inventory_item_id=…`) で末尾数値だけでは一意にならない点に注意
+(本基盤は gid を丸ごと保持する)。
+
 ### Collection (コレクション) — [doc](https://shopify.dev/docs/api/admin-graphql/latest/objects/Collection)
 
 商品グルーピング。手動 (指定) と自動 (ルール) がある。`products` で多対多に **Product** を含む。
@@ -229,6 +326,11 @@ erDiagram
 | sortOrder | enum | 商品の並び順 | `BEST_SELLING` / `MANUAL` |
 | productsCount.count | Int | 所属商品数 | `24` |
 | products | ProductConnection | 所属商品 (id を取得) | `[{ id: gid://shopify/Product/900 }]` |
+
+**実務メモ**: 手動コレクションは merchant が商品を明示追加し、自動 (スマート) コレクションは
+「タグ = 新作」「価格 < 3000」などのルール (`ruleSet`) で所属が自動決定される。同じ商品が
+複数コレクションに属するため、コレクション別売上を単純合計すると重複計上になる (按分か重複前提で扱う)。
+`sortOrder` は売り場の並び順で、分析の意味は薄い。本基盤では所属を `product_collections` ブリッジに展開する。
 
 ### Discount (DiscountNode) / DiscountRedeemCode
 
@@ -249,6 +351,11 @@ erDiagram
 **DiscountRedeemCode**: コード割引の実コード文字列と利用回数 (`code` / `asyncUsageCount`)。
 注文には `discountCodes` (文字列) として適用される (直接の FK ではない)。例: `code = "SUMMER10"`。
 
+**実務メモ**: DiscountNode は「コード割引 / 自動割引」×「値引き種別 (％/固定額/送料無料/BXGY)」の
+組み合わせをユニオン型で束ねる。取り込み側はこのユニオンを平坦化して `discount_type` に種別を残す。
+注文と割引は**コード文字列の一致でしか結べない**ため、割引×注文の分析はコードで突き合わせる
+(同名コードの再利用や自動割引=コード無しに注意)。`asyncUsageCount` は集計に遅延があり得る。
+
 ### AbandonedCheckout (放棄チェックアウト) — [doc](https://shopify.dev/docs/api/admin-graphql/latest/objects/AbandonedCheckout)
 
 未完了のチェックアウト (カゴ落ち)。`completedAt` が非 null なら後から購入=復帰。
@@ -261,6 +368,10 @@ erDiagram
 | totalPriceSet | MoneyBag | カゴ総額 | `"3300.00"` |
 | customer | Customer | 顧客 (匿名は null) | `{ id: gid://shopify/Customer/207119551 }` |
 | lineItems | AbandonedCheckoutLineItemConnection | カゴ内明細 | `[{ title: "Tシャツ", quantity: 1 }]` |
+
+**実務メモ**: カゴ落ちは「チェックアウト開始 → 未完了」の状態。`completedAt` が入ると購入=復帰で、
+その注文は Order 側にも現れる (二重計上に注意)。復帰率 = `completedAt` 非 null 件数 / 全放棄件数。
+リカバリーメールの効果測定や、離脱の多い価格帯・商品の把握に使う。匿名カゴは `customer = null`。
 
 ## 関係の要点 (カーディナリティ)
 
