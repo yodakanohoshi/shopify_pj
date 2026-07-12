@@ -5,4 +5,4 @@ log_level = "INFO"
 [sources.shopify]
 # shop はサブドメイン ("my-store") でもフルドメインでも可
 shop = "your-dev-store"
-api_version = "2025-01"
+api_version = "2026-07"
