@@ -1,0 +1,7 @@
+# 調査用の生成物・秘密情報はコミットしない
+.venv/
+__pycache__/
+.env
+samples/
+*.duckdb
+*.duckdb.wal
