@@ -50,19 +50,36 @@ BULK_ORDERS = """
       id
       legacyResourceId
       name
+      number
+      confirmationNumber
       createdAt
       updatedAt
       processedAt
       cancelledAt
       closedAt
+      cancelReason
+      closed
+      test
+      taxesIncluded
+      taxExempt
       displayFinancialStatus
       displayFulfillmentStatus
       currencyCode
       email
       phone
       note
+      poNumber
+      customerLocale
+      customerAcceptsMarketing
+      billingAddressMatchesShippingAddress
+      subtotalLineItemsQuantity
+      currentSubtotalLineItemsQuantity
+      currentTotalWeight
+      fulfillmentsCount { count }
+      paymentGatewayNames
       tags
       sourceName
+      discountCode
       discountCodes
       customer { id }
       shippingAddress { city province country countryCodeV2 zip }
@@ -70,10 +87,14 @@ BULK_ORDERS = """
       totalPriceSet { shopMoney { amount currencyCode } }
       subtotalPriceSet { shopMoney { amount } }
       currentTotalPriceSet { shopMoney { amount } }
+      currentSubtotalPriceSet { shopMoney { amount } }
       totalTaxSet { shopMoney { amount } }
+      currentTotalTaxSet { shopMoney { amount } }
       totalDiscountsSet { shopMoney { amount } }
+      currentTotalDiscountsSet { shopMoney { amount } }
       totalShippingPriceSet { shopMoney { amount } }
       totalRefundedSet { shopMoney { amount } }
+      netPaymentSet { shopMoney { amount } }
       lineItems {
         edges { node {
           id
@@ -87,6 +108,35 @@ BULK_ORDERS = """
           discountedUnitPriceSet { shopMoney { amount } }
           totalDiscountSet { shopMoney { amount } }
         } }
+      }
+      refunds {
+        id
+        createdAt
+        processedAt
+        note
+        totalRefundedSet { shopMoney { amount currencyCode } }
+      }
+      fulfillments {
+        id
+        status
+        displayStatus
+        createdAt
+        updatedAt
+        estimatedDeliveryAt
+        deliveredAt
+        inTransitAt
+        totalQuantity
+        name
+      }
+      transactions {
+        id
+        kind
+        status
+        gateway
+        processedAt
+        createdAt
+        test
+        amountSet { shopMoney { amount currencyCode } }
       }
     } }
   }
@@ -102,6 +152,7 @@ BULK_PRODUCTS = """
       legacyResourceId
       title
       handle
+      description
       productType
       vendor
       status
@@ -110,6 +161,14 @@ BULK_PRODUCTS = """
       publishedAt
       tags
       totalInventory
+      tracksInventory
+      hasOnlyDefaultVariant
+      isGiftCard
+      requiresSellingPlan
+      templateSuffix
+      onlineStoreUrl
+      variantsCount { count }
+      seo { title description }
       category { id name fullName }
       options { name position }
       variants {
@@ -117,14 +176,24 @@ BULK_PRODUCTS = """
           id
           legacyResourceId
           title
+          displayName
           sku
           barcode
           price
           compareAtPrice
           inventoryQuantity
+          sellableOnlineQuantity
+          availableForSale
+          taxable
+          inventoryPolicy
           position
+          createdAt
+          updatedAt
           selectedOptions { name value }
           inventoryItem {
+            id
+            tracked
+            requiresShipping
             unitCost { amount currencyCode }
             measurement { weight { value unit } }
           }
@@ -149,6 +218,11 @@ BULK_CUSTOMERS = """
       tags
       verifiedEmail
       state
+      taxExempt
+      locale
+      lifetimeDuration
+      canDelete
+      dataSaleOptOut
       numberOfOrders
       createdAt
       updatedAt
@@ -172,8 +246,11 @@ BULK_COLLECTIONS = """
       id
       title
       handle
+      description
+      templateSuffix
       updatedAt
       sortOrder
+      seo { title description }
       productsCount { count }
       products {
         edges { node { id } }
@@ -194,9 +271,17 @@ BULK_ABANDONED_CHECKOUTS = """
       updatedAt
       completedAt
       abandonedCheckoutUrl
+      note
+      taxesIncluded
+      discountCodes
       customer { id }
+      billingAddress { city province country countryCodeV2 zip }
+      shippingAddress { city province country countryCodeV2 zip }
       totalPriceSet { shopMoney { amount currencyCode } }
       subtotalPriceSet { shopMoney { amount } }
+      totalLineItemsPriceSet { shopMoney { amount } }
+      totalTaxSet { shopMoney { amount } }
+      totalDiscountSet { shopMoney { amount } }
       lineItems {
         edges { node {
           id
@@ -271,9 +356,40 @@ query Locations($first: Int!, $after: String, $query: String) {
       name
       isActive
       fulfillsOnlineOrders
-      address { city province country countryCode zip }
+      shipsInventory
+      hasActiveInventory
+      address {
+        address1 address2 city province provinceCode
+        country countryCode zip phone latitude longitude
+      }
     } }
     pageInfo { hasNextPage endCursor }
+  }
+}
+"""
+
+
+# --- 在庫レベル (locations → inventoryLevels) ----------------------------
+# ロケーション×在庫アイテムの在庫数スナップショット。Bulk で全件取得する。
+# InventoryLevel ノードは __parentId に location gid を持ち、item.id で
+# product_variants.inventory_item__id と結合できる。quantities は必須引数
+# names を取り、name/quantity のペアが inventory_levels__quantities 子へ展開される。
+BULK_INVENTORY_LEVELS = """
+{
+  locations {
+    edges { node {
+      id
+      inventoryLevels {
+        edges { node {
+          id
+          item { id sku }
+          quantities(names: ["available", "on_hand", "committed", "incoming"]) {
+            name
+            quantity
+          }
+        } }
+      }
+    } }
   }
 }
 """

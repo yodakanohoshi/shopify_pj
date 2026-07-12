@@ -38,17 +38,22 @@ Bulk 系リソースは `write_disposition="merge"` (primary_key=`id`) で upser
 
 | ソース | 方式 | 生成される raw テーブル |
 |---|---|---|
-| 注文 | Bulk | `orders`, `order_line_items` |
-| 商品 | Bulk | `products`, `product_variants` (原価 `inventory_item__unit_cost` 含む) |
+| 注文 | Bulk | `orders`, `order_line_items`, `orders__refunds`, `orders__fulfillments`, `orders__transactions` (返金/出荷/取引は inline list 子) |
+| 商品 | Bulk | `products`, `product_variants` (原価 `inventory_item__unit_cost` / 在庫 `inventory_item__id` 含む) |
 | 顧客 | Bulk | `customers` (メール配信同意含む), `customer_addresses` |
 | コレクション | Bulk | `collections`, `collection_products` (商品所属) |
 | 放棄チェックアウト | Bulk | `abandoned_checkouts`, `abandoned_checkout_line_items` |
+| 在庫レベル | Bulk (全件) | `inventory_levels`, `inventory_levels__quantities` (locations→inventoryLevels) |
 | 割引 | ページング | `discounts`, `discounts__codes` (**dlt 標準非対応**・`discountNodes`) |
 | ロケーション | ページング | `locations` |
 
 > Bulk 制約: 1クエリ connection 最大5・ネスト最大2階層・ノードは Node(id)必須。
 > このため注文の割引適用 (`discountApplications`, Node 非実装) は Bulk 対象外とし、
 > 注文の `discount_codes` (コード文字列) と `discounts` ディメンションで代替する。
+> 返金/出荷/取引 (`refunds`/`fulfillments`/`transactions`) はコネクションでなく
+> リスト型のため、注文ノードに inline 展開され dlt が `orders__*` 子テーブルへ正規化する
+> (connection 枠を消費しない)。
+> 在庫レベルは差分キーが無いため毎回全件取得 (`replace`)。
 > 同時に実行できる Bulk operation は1つのみ (リソースは逐次実行される)。
 
 ## セットアップ

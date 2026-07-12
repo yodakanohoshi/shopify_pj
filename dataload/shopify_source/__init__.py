@@ -42,6 +42,9 @@ CHECKOUT_TYPES = {
     "AbandonedCheckout": "abandoned_checkouts",
     "AbandonedCheckoutLineItem": "abandoned_checkout_line_items",
 }
+# 在庫レベルは locations → inventoryLevels を Bulk で取得。Location ノードは
+# 別途ページングで取得済みのためここでは無視し、InventoryLevel のみを振り分ける。
+INVENTORY_TYPES = {"InventoryLevel": "inventory_levels"}
 
 # Bulk リソースの差分取得定義:
 #   (リソース名, Bulk テンプレート, 型→テーブル対応,
@@ -126,6 +129,22 @@ def shopify_source(
 
     bulk_resources = [_bulk_resource(*spec) for spec in BULK_RESOURCES]
 
+    def _bulk_full_resource(name: str, template: str, type_map: dict[str, str]) -> DltResource:
+        """差分に載せない Bulk リソース (毎回全件・replace)。在庫スナップショット等向け。"""
+
+        @dlt.resource(name=name, primary_key="id", write_disposition="replace")
+        def resource() -> Iterator[Any]:
+            query = queries.build(template)  # フィルタ無し = 全件
+            for table, record in route_records(run_bulk(client, query), type_map):
+                yield dlt.mark.with_table_name(record, table)
+
+        return resource
+
+    # 在庫レベル: 現在庫のスナップショット。updated_at 相当の差分キーが無いため全件 replace。
+    inventory_levels = _bulk_full_resource(
+        "inventory_levels", queries.BULK_INVENTORY_LEVELS, INVENTORY_TYPES
+    )
+
     # --- 小さなディメンション: 差分に載せず毎回全件洗い替え ---------------
     @dlt.resource(name="discounts", primary_key="id", write_disposition="replace")
     def discounts() -> Iterator[dict[str, Any]]:
@@ -139,4 +158,4 @@ def shopify_source(
     def locations() -> Iterator[dict[str, Any]]:
         yield from paginate(client, queries.LOCATIONS_PAGINATED, "locations", page_size=page_size)
 
-    return (*bulk_resources, discounts, locations)
+    return (*bulk_resources, inventory_levels, discounts, locations)
