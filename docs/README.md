@@ -25,6 +25,9 @@ marts        ← marts_tables/      ← BI / 分析はここを参照
 
 各ディレクトリの `README.md` に、そのレイヤのテーブル一覧と ER 概要を置く。
 
+- [`apireference/`](apireference/) — Shopify Admin API と raw データの関係。API リソースの ER (mermaid)、
+  raw テーブルとの対応・取得方式 (Bulk / inline / ページング)、gid の扱い。
+
 ## 記法
 
 - **型** は DuckDB / dbt 上の論理型。金額は Shopify API では文字列で返るため staging 以降で `double` に変換する。
