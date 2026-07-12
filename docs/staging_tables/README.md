@@ -13,8 +13,10 @@ raw を 1:1 でクレンジング (型付け・リネーム・金額の数値化
 | stg_shopify__order_transactions | orders__transactions | [stg_shopify__order_transactions.md](stg_shopify__order_transactions.md) |
 | stg_shopify__customers | customers | [stg_shopify__customers.md](stg_shopify__customers.md) |
 | stg_shopify__customer_addresses | customer_addresses | [stg_shopify__customer_addresses.md](stg_shopify__customer_addresses.md) |
+| stg_shopify__customer_tags | customers__tags | [stg_shopify__customer_tags.md](stg_shopify__customer_tags.md) |
 | stg_shopify__products | products | [stg_shopify__products.md](stg_shopify__products.md) |
 | stg_shopify__product_variants | product_variants | [stg_shopify__product_variants.md](stg_shopify__product_variants.md) |
+| stg_shopify__product_tags | products__tags | [stg_shopify__product_tags.md](stg_shopify__product_tags.md) |
 | stg_shopify__collections | collections | [stg_shopify__collections.md](stg_shopify__collections.md) |
 | stg_shopify__collection_products | collection_products | [stg_shopify__collection_products.md](stg_shopify__collection_products.md) |
 | stg_shopify__abandoned_checkouts | abandoned_checkouts | [stg_shopify__abandoned_checkouts.md](stg_shopify__abandoned_checkouts.md) |

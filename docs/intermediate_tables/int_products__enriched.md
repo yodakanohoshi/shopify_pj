@@ -17,4 +17,6 @@
 | 平均原価 | avg_unit_cost | double | 平均原価 |
 | 粗利率概算 | est_margin_rate | double | 粗利率概算 = (min_price − avg_unit_cost) / min_price |
 | 総在庫数 | total_inventory | integer | 総在庫 |
+| SKU一覧 / JAN一覧 | sku_list / jan_list | varchar | 配下バリアントの SKU / バーコード(JAN等) をカンマ連結 |
+| タグ | tags | varchar | 商品タグをカンマ連結 (明細は stg_shopify__product_tags) |
 | 作成日時 / 公開日時 | created_at / published_at | timestamp | 各日時 |

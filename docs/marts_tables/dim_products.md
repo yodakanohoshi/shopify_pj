@@ -9,6 +9,9 @@
 | 商品名 / URLハンドル | product_title / handle | varchar | 商品名 / ハンドル |
 | 商品タイプ / カテゴリ名 / カテゴリ正式名 / ベンダー | product_type / category_name / category_full_name / vendor | varchar | 分類 |
 | ステータス | product_status | varchar | ACTIVE / ARCHIVED / DRAFT |
+| タグ | tags | varchar | 商品タグをカンマ連結。明細は stg_shopify__product_tags |
+| SKU一覧 | sku_list | varchar | 配下バリアントの SKU をカンマ連結 |
+| JAN一覧 | jan_list | varchar | 配下バリアントのバーコード (JAN/EAN/UPC) をカンマ連結 |
 | ギフトカード | is_gift_card | boolean | ギフトカード商品か |
 | 在庫追跡有無 | tracks_inventory | boolean | 在庫追跡が有効か |
 | 単一既定バリアント | has_only_default_variant | boolean | 既定 1 バリアントのみか |

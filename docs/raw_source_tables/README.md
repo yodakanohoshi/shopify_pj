@@ -13,8 +13,10 @@ dlt が Shopify Admin GraphQL API から投入する生データ。列名 snake_
 | orders__fulfillments | Bulk (inline list) | orders | [orders__fulfillments.md](orders__fulfillments.md) |
 | orders__transactions | Bulk (inline list) | orders | [orders__transactions.md](orders__transactions.md) |
 | products | Bulk | — | [products.md](products.md) |
+| products__tags | Bulk (inline list) | products | [products__tags.md](products__tags.md) |
 | product_variants | Bulk | products | [product_variants.md](product_variants.md) |
 | customers | Bulk | — | [customers.md](customers.md) |
+| customers__tags | Bulk (inline list) | customers | [customers__tags.md](customers__tags.md) |
 | customer_addresses | Bulk | customers | [customer_addresses.md](customer_addresses.md) |
 | collections | Bulk | — | [collections.md](collections.md) |
 | collection_products | Bulk | collections | [collection_products.md](collection_products.md) |

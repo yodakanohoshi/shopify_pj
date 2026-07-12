@@ -18,5 +18,6 @@
 | 注文数 / 売上合計 / 平均注文額 | orders_count / revenue_total / avg_order_value | integer / double | 実注文集計 (キャンセル除く) |
 | 登録住所数 | address_count | integer | 登録住所数 |
 | 顧客セグメント | customer_segment | varchar | prospect / one_time / repeat / loyal |
+| タグ | tags | varchar | 顧客タグをカンマ連結 (明細は stg_shopify__customer_tags) |
 | 初回注文日 / 最新注文日 | first_order_date / latest_order_date | date | 初回 / 最新注文日 |
 | 作成日時 / 更新日時 | created_at / updated_at | timestamp | 各日時 |

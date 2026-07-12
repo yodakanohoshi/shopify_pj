@@ -11,6 +11,7 @@
 | メール配信同意状態 | email_marketing_state | varchar | 配信同意状態 |
 | 顧客状態 | customer_state | varchar | 顧客状態 |
 | 顧客セグメント | customer_segment | varchar | prospect / one_time / repeat / loyal |
+| タグ | tags | varchar | 顧客タグをカンマ連結 (例 `vip, wholesale`)。明細は stg_shopify__customer_tags |
 | 免税フラグ | tax_exempt | boolean | 注文で課税免除されるか |
 | 顧客ロケール | customer_locale | varchar | 顧客の言語/地域設定 |
 | 登録経過期間 | lifetime_duration | varchar | 初回登録からの経過 (例 about 2 years) |

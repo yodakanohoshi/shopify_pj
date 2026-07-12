@@ -7,7 +7,7 @@
 | バリアントID | id | varchar | バリアント global ID。**PK** |
 | 親ID | parent_id | varchar | 親商品の gid。**FK → products.id** |
 | レガシーID | legacy_resource_id | varchar | 数値 legacy ID |
-| バリアント名 / SKU / バーコード | title / sku / barcode | varchar | 名称 / SKU / バーコード |
+| バリアント名 / SKU / バーコード | title / sku / barcode | varchar | 名称 / SKU / バーコード (JAN / EAN / UPC 等) |
 | 表示名 | display_name | varchar | 商品名 + バリアント名 |
 | 価格 / 参考価格 | price / compare_at_price | varchar(数値) | 価格 / 参考価格 |
 | 販売可否 | available_for_sale | boolean | 販売可能か |

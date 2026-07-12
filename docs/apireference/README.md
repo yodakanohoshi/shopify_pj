@@ -54,8 +54,10 @@ gid から ID 部分を**文字列 (数値の文字列。例 `"7648543047976"`)*
 | orders__transactions | `OrderTransaction` (`order.transactions`) | inline list | orders (`_dlt_parent_id`→`_dlt_id`) |
 | orders__discount_codes | `order.discountCodes` (`[String!]`) | inline list | orders (`_dlt_parent_id`→`_dlt_id`) |
 | products | `Product` (`products`) | Bulk | — |
+| products__tags | `product.tags` (`[String!]`) | inline list | products (`_dlt_parent_id`→`_dlt_id`) |
 | product_variants | `ProductVariant` (`product.variants`) | Bulk | products (`parent_id`→`id`) |
 | customers | `Customer` (`customers`) | Bulk | — |
+| customers__tags | `customer.tags` (`[String!]`) | inline list | customers (`_dlt_parent_id`→`_dlt_id`) |
 | customer_addresses | `MailingAddress` (`customer.addressesV2`) | Bulk | customers (`parent_id`→`id`) |
 | collections | `Collection` (`collections`) | Bulk | — |
 | collection_products | `Product` (`collection.products`) | Bulk | collections (`parent_id`→`id`) |
@@ -81,6 +83,8 @@ erDiagram
     orders ||--o{ orders__transactions : "_dlt_id = _dlt_parent_id"
     orders ||--o{ orders__discount_codes : "_dlt_id = _dlt_parent_id"
     products ||--o{ product_variants : "id = parent_id"
+    products ||--o{ products__tags : "_dlt_id = _dlt_parent_id"
+    customers ||--o{ customers__tags : "_dlt_id = _dlt_parent_id"
     collections ||--o{ collection_products : "id = parent_id"
     collection_products }o--|| products : "id = product gid"
     abandoned_checkouts ||--o{ abandoned_checkout_line_items : "id = parent_id"
