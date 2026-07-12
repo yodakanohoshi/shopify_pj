@@ -22,6 +22,24 @@ models:
   - name: stg_shopify__order_discount_codes
     description: "注文に適用された割引コード。1 行 = (注文 × コード)。"
 
+  - name: stg_shopify__order_refunds
+    description: "注文の返金。1 行 = 1 返金。order_dlt_id で注文に紐づく。"
+    columns:
+      - name: refund_id
+        tests: [unique, not_null]
+
+  - name: stg_shopify__fulfillments
+    description: "注文のフルフィルメント (出荷)。1 行 = 1 出荷。order_dlt_id で注文に紐づく。"
+    columns:
+      - name: fulfillment_id
+        tests: [unique, not_null]
+
+  - name: stg_shopify__order_transactions
+    description: "注文の決済取引。1 行 = 1 取引。order_dlt_id で注文に紐づく。"
+    columns:
+      - name: transaction_id
+        tests: [unique, not_null]
+
   - name: stg_shopify__customers
     description: "顧客マスタ。1 行 = 1 顧客。メール配信同意を含む。"
     columns:
@@ -91,4 +109,10 @@ models:
     description: "ロケーション (在庫/フルフィルメント拠点)。1 行 = 1 拠点。"
     columns:
       - name: location_id
+        tests: [unique, not_null]
+
+  - name: stg_shopify__inventory_levels
+    description: "在庫レベル。1 行 = (ロケーション × 在庫アイテム)。available/on_hand 等を横持ち。"
+    columns:
+      - name: inventory_level_id
         tests: [unique, not_null]

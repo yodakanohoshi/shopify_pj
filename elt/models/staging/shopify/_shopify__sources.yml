@@ -15,6 +15,12 @@ sources:
         description: "注文明細 (Bulk)。parent_id が orders.id を参照。"
       - name: orders__discount_codes
         description: "注文に適用された割引コード文字列 (orders の inline list 子。value 列)。"
+      - name: orders__refunds
+        description: "注文の返金 (orders の inline list 子)。_dlt_parent_id が orders._dlt_id を参照。"
+      - name: orders__fulfillments
+        description: "注文のフルフィルメント/出荷 (orders の inline list 子)。_dlt_parent_id が orders._dlt_id を参照。"
+      - name: orders__transactions
+        description: "注文の決済取引 (orders の inline list 子)。_dlt_parent_id が orders._dlt_id を参照。"
       - name: products
         description: "商品ヘッダ (Bulk)。category / options を含む。"
         columns:
@@ -57,3 +63,10 @@ sources:
         columns:
           - name: id
             tests: [unique, not_null]
+      - name: inventory_levels
+        description: "在庫レベル (Bulk・locations → inventoryLevels)。parent_id=ロケーションgid、item__id=在庫アイテムgid。"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+      - name: inventory_levels__quantities
+        description: "在庫数の name/quantity ペア (inventory_levels の inline list 子)。_dlt_parent_id が inventory_levels._dlt_id を参照。"

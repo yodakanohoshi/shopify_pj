@@ -67,6 +67,30 @@ models:
                 to: ref('fct_orders')
                 field: order_id
 
+  - name: fct_refunds
+    description: "返金ファクト。1 行 = 1 返金。返金額・返金日・注文/顧客。"
+    columns:
+      - name: refund_id
+        tests: [unique, not_null]
+
+  - name: fct_fulfillments
+    description: "フルフィルメント (出荷) ファクト。1 行 = 1 出荷。配送リードタイム。"
+    columns:
+      - name: fulfillment_id
+        tests: [unique, not_null]
+
+  - name: fct_order_transactions
+    description: "決済取引ファクト。1 行 = 1 取引。ゲートウェイ別売上・入金・返金。"
+    columns:
+      - name: transaction_id
+        tests: [unique, not_null]
+
+  - name: fct_inventory_levels
+    description: "在庫レベルファクト。1 行 = (ロケーション × 在庫アイテム)。欠品・在庫回転。"
+    columns:
+      - name: inventory_level_id
+        tests: [unique, not_null]
+
   - name: fct_discount_performance
     description: "割引パフォーマンスファクト。1 行 = 1 割引。"
     columns:

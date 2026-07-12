@@ -38,6 +38,9 @@ select
     -- 配信可能フラグ
     (c.email_marketing_state = 'SUBSCRIBED')    as is_email_subscribed,
     c.customer_state,
+    c.tax_exempt,
+    c.customer_locale,
+    c.lifetime_duration,
     c.country,
     c.country_code,
     c.city,
