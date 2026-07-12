@@ -4,9 +4,9 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| 返金ID | refund_id | varchar | 返金 ID。**PK** |
-| 注文ID | order_id | varchar | 注文 ID。**FK → fct_orders** |
-| 顧客ID | customer_id | varchar | 顧客 ID。**FK → dim_customers** (ゲストは null) |
+| 返金ID | refund_id | varchar | 数値ID (gid から抽出)。**PK** |
+| 注文ID | order_id | varchar | 数値ID (gid から抽出)。**FK → fct_orders** |
+| 顧客ID | customer_id | varchar | 数値ID (gid から抽出)。**FK → dim_customers** (ゲストは null) |
 | 返金日 | refund_date | date | 返金日 (created_at の日付) |
 | 返金額 | refund_amount | double | 全取引の返金合計額 |
 | 通貨コード | currency_code | varchar | 返金額の通貨 |

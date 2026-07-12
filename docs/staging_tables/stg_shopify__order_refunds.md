@@ -4,7 +4,7 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| 返金ID | refund_id | varchar | 返金 global ID。**PK** |
+| 返金ID | refund_id | varchar | 返金の数値ID (gid から抽出)。**PK** |
 | 注文dlt行ID | order_dlt_id | varchar | 親注文への結合キー。**FK → stg_shopify__orders.order_dlt_id** |
 | メモ | note | varchar | 返金の任意メモ |
 | 返金額 | refund_amount | double | 全取引の返金合計額 |

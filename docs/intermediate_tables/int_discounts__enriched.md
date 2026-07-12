@@ -4,7 +4,7 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| 割引ID | discount_id | varchar | 割引 ID。**PK** |
+| 割引ID | discount_id | varchar | 数値ID (gid から抽出)。**PK** |
 | 割引タイプ / 割引方式 | discount_type / discount_method | varchar | 種別 / 手法 |
 | 割引名 / ステータス | discount_title / discount_status | varchar | 名称 / 状態 |
 | 割引率 / 割引額 / 通貨コード | discount_percentage / discount_amount / discount_currency | double / varchar | 割引値 |

@@ -5,7 +5,7 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| コレクションID | collection_id | varchar | コレクション ID。**FK → dim_collections** |
+| コレクションID | collection_id | varchar | 数値ID (gid から抽出)。**FK → dim_collections** |
 | コレクション名 / URLハンドル | collection_title / collection_handle | varchar | コレクション名 / ハンドル |
-| 商品ID | product_id | varchar | 商品 ID。**FK → dim_products** |
+| 商品ID | product_id | varchar | 数値ID (gid から抽出)。**FK → dim_products** |
 | 商品名 / 商品タイプ | product_title / product_type | varchar | 商品名 / タイプ |

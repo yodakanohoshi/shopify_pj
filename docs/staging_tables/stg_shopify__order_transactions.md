@@ -4,7 +4,7 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| 取引ID | transaction_id | varchar | 取引 global ID。**PK** |
+| 取引ID | transaction_id | varchar | 取引の数値ID (gid から抽出)。**PK** |
 | 注文dlt行ID | order_dlt_id | varchar | 親注文への結合キー。**FK → stg_shopify__orders.order_dlt_id** |
 | 取引種別 | transaction_kind | varchar | authorization / capture / sale / refund / void 等 |
 | 取引ステータス | transaction_status | varchar | SUCCESS / FAILURE / PENDING 等 |

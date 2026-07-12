@@ -4,7 +4,7 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| ロケーションID | location_id | varchar | ロケーション ID。**PK** |
+| ロケーションID | location_id | varchar | 数値ID (gid から抽出)。**PK** |
 | ロケーションレガシーID | location_legacy_id | varchar | 数値 legacy ID |
 | ロケーション名 | location_name | varchar | 拠点名 |
 | 有効フラグ | is_active | boolean | 有効か |

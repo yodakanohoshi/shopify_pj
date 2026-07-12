@@ -4,7 +4,7 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| 商品ID | product_id | varchar | 商品 ID。**PK** |
+| 商品ID | product_id | varchar | 数値ID (gid から抽出)。**PK** |
 | 商品レガシーID | product_legacy_id | varchar | 数値 legacy ID |
 | 商品名 / URLハンドル | product_title / handle | varchar | 商品名 / ハンドル |
 | 商品タイプ / カテゴリ名 / カテゴリ正式名 / ベンダー | product_type / category_name / category_full_name / vendor | varchar | 分類 |

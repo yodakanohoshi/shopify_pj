@@ -4,8 +4,8 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| カゴ落ちID | checkout_id | varchar | チェックアウト ID。**PK** |
-| 顧客ID | customer_id | varchar | 顧客 ID (匿名は null) |
+| カゴ落ちID | checkout_id | varchar | 数値ID (gid から抽出)。**PK** |
+| 顧客ID | customer_id | varchar | 数値ID (gid から抽出、匿名は null) |
 | 通貨コード | currency_code | varchar | 通貨 |
 | 合計金額 / 小計 | total_price / subtotal_price | double | 合計 / 小計 |
 | 明細数 / 合計数量 | line_count / total_quantity | integer | 明細集計 |

@@ -13,7 +13,7 @@
 | 販売可否 | available_for_sale | boolean | 販売可能か |
 | 課税対象 | taxable | boolean | 販売時課税されるか |
 | 在庫ポリシー | inventory_policy | varchar | 在庫切れ時の注文可否 |
-| 在庫アイテムID | inventory_item_id | varchar | 在庫レベルとの結合キー (gid) |
+| 在庫アイテムID | inventory_item_id | varchar | 在庫レベルとの結合キー。数値ID (gid から抽出) |
 | 在庫追跡 | inventory_tracked | boolean | 在庫レベル追跡有無 |
 | 配送要否 | requires_shipping | boolean | 配送が必要か |
 | 原価 / 通貨コード | unit_cost / unit_cost_currency | double / varchar | **原価** / 通貨 (粗利計算) |

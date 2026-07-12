@@ -4,7 +4,7 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| 顧客ID | customer_id | varchar | 顧客 ID。**PK** |
+| 顧客ID | customer_id | varchar | 数値ID (gid から抽出)。**PK** |
 | 顧客レガシーID | customer_legacy_id | varchar | 数値 legacy ID |
 | 名 / 姓 / メールアドレス | first_name / last_name / email | varchar | 氏名・メール |
 | メール配信可能 | is_email_subscribed | boolean | メール配信可能か |

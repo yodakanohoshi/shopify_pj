@@ -4,9 +4,9 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| 注文ID | order_id | varchar | 注文 ID。**PK** |
+| 注文ID | order_id | varchar | 数値ID (gid から抽出)。**PK** |
 | 注文名 | order_name | varchar | 注文名 |
-| 顧客ID | customer_id | varchar | 顧客 ID。**FK → dim_customers** (ゲストは null) |
+| 顧客ID | customer_id | varchar | 数値ID (gid から抽出)。**FK → dim_customers** (ゲストは null) |
 | 注文日 | order_date | date | 注文日 |
 | 注文チャネル | source_name | varchar | チャネル |
 | 支払ステータス / 配送ステータス | financial_status / fulfillment_status | varchar | ステータス |

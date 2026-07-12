@@ -5,10 +5,10 @@
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
 | 在庫レベルID | inventory_level_id | varchar | InventoryLevel ID。**PK** |
-| ロケーションID | location_id | varchar | ロケーション ID。**FK → dim_locations** |
+| ロケーションID | location_id | varchar | 数値ID (gid から抽出)。**FK → dim_locations** |
 | ロケーション名 | location_name | varchar | 拠点名 |
-| 在庫アイテムID | inventory_item_id | varchar | InventoryItem ID (variant の inventory_item_id と結合) |
-| バリアントID / 商品ID | variant_id / product_id | varchar | バリアント ID / 商品 ID。**FK → dim_products** |
+| 在庫アイテムID | inventory_item_id | varchar | 数値ID (gid から抽出。variant の inventory_item_id と結合) |
+| バリアントID / 商品ID | variant_id / product_id | varchar | 数値ID (gid から抽出)。**FK → dim_products** |
 | SKU | sku | varchar | 在庫アイテムの SKU |
 | 利用可能数 | available | integer | 販売可能な在庫数 |
 | 実在庫数 | on_hand | integer | 物理的に保有する在庫数 |

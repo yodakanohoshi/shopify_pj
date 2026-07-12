@@ -4,9 +4,9 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| 取引ID | transaction_id | varchar | 取引 ID。**PK** |
-| 注文ID | order_id | varchar | 注文 ID。**FK → fct_orders** |
-| 顧客ID | customer_id | varchar | 顧客 ID。**FK → dim_customers** (ゲストは null) |
+| 取引ID | transaction_id | varchar | 数値ID (gid から抽出)。**PK** |
+| 注文ID | order_id | varchar | 数値ID (gid から抽出)。**FK → fct_orders** |
+| 顧客ID | customer_id | varchar | 数値ID (gid から抽出)。**FK → dim_customers** (ゲストは null) |
 | 取引種別 | transaction_kind | varchar | authorization / capture / sale / refund / void 等 |
 | 取引ステータス | transaction_status | varchar | SUCCESS / FAILURE / PENDING 等 |
 | 決済GW | gateway | varchar | 使用決済ゲートウェイ |

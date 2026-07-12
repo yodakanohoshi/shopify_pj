@@ -4,9 +4,9 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| 明細ID | order_line_id | varchar | 明細 ID。**PK** |
-| 注文ID | order_id | varchar | 注文 ID。**FK → fct_orders** |
-| 商品ID / バリアントID | product_id / variant_id | varchar | 商品 / バリアント ID |
+| 明細ID | order_line_id | varchar | 数値ID (gid から抽出)。**PK** |
+| 注文ID | order_id | varchar | 数値ID (gid から抽出)。**FK → fct_orders** |
+| 商品ID / バリアントID | product_id / variant_id | varchar | 数値ID (gid から抽出) |
 | 商品名 / 商品タイプ / カテゴリ名 / ベンダー | product_title / product_type / category_name / vendor | varchar | 商品属性 |
 | SKU | sku | varchar | SKU |
 | 注文日 | order_date | date | 注文日 |

@@ -4,9 +4,9 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| 注文ID | order_id | varchar | 注文 ID。**PK** |
+| 注文ID | order_id | varchar | 数値ID (gid から抽出)。**PK** |
 | 注文名 / 注文レガシーID | order_name / order_legacy_id | varchar | 注文名 / legacy ID |
-| 顧客ID | customer_id | varchar | 顧客 ID (FK) |
+| 顧客ID | customer_id | varchar | 数値ID (gid から抽出)。**FK** |
 | 顧客メールアドレス / 顧客国 | customer_email / customer_country | varchar | 顧客付帯情報 (結合) |
 | 支払ステータス / 配送ステータス | financial_status / fulfillment_status | varchar | ステータス |
 | キャンセル理由 | cancel_reason | varchar | キャンセルの理由 (未キャンセルは null) |

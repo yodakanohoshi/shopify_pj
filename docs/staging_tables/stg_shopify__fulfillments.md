@@ -4,7 +4,7 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| 出荷ID | fulfillment_id | varchar | フルフィルメント global ID。**PK** |
+| 出荷ID | fulfillment_id | varchar | フルフィルメントの数値ID (gid から抽出)。**PK** |
 | 注文dlt行ID | order_dlt_id | varchar | 親注文への結合キー。**FK → stg_shopify__orders.order_dlt_id** |
 | 出荷名 | fulfillment_name | varchar | 出荷の参照識別子 |
 | 出荷ステータス | fulfillment_status | varchar | 出荷の状態 |

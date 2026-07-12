@@ -5,8 +5,8 @@
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
 | 在庫レベルID | inventory_level_id | varchar | InventoryLevel global ID。**PK** |
-| ロケーションID | location_id | varchar | ロケーション gid。**FK → stg_shopify__locations.location_id** |
-| 在庫アイテムID | inventory_item_id | varchar | InventoryItem gid。**FK → stg_shopify__product_variants.inventory_item_id** |
+| ロケーションID | location_id | varchar | ロケーションの数値ID (gid から抽出)。**FK → stg_shopify__locations.location_id** |
+| 在庫アイテムID | inventory_item_id | varchar | InventoryItem の数値ID (gid から抽出)。**FK → stg_shopify__product_variants.inventory_item_id** |
 | SKU | sku | varchar | 在庫アイテムの SKU |
 | 利用可能数 | available | integer | 販売可能な在庫数 (name=available) |
 | 実在庫数 | on_hand | integer | 物理的な在庫数 (name=on_hand) |

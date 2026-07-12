@@ -4,9 +4,9 @@
 
 | 日本語名 | 論理名 | 型 | 説明 |
 |---|---|---|---|
-| 出荷ID | fulfillment_id | varchar | フルフィルメント ID。**PK** |
-| 注文ID | order_id | varchar | 注文 ID。**FK → fct_orders** |
-| 顧客ID | customer_id | varchar | 顧客 ID。**FK → dim_customers** (ゲストは null) |
+| 出荷ID | fulfillment_id | varchar | 数値ID (gid から抽出)。**PK** |
+| 注文ID | order_id | varchar | 数値ID (gid から抽出)。**FK → fct_orders** |
+| 顧客ID | customer_id | varchar | 数値ID (gid から抽出)。**FK → dim_customers** (ゲストは null) |
 | 出荷名 | fulfillment_name | varchar | 出荷の参照識別子 |
 | 出荷ステータス | fulfillment_status | varchar | 出荷の状態 |
 | 表示ステータス | display_status | varchar | 人間可読の表示ステータス |
