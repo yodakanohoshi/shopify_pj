@@ -52,6 +52,14 @@ models:
       - name: address_id
         tests: [unique, not_null]
 
+  - name: stg_shopify__customer_tags
+    description: "顧客タグ (long)。1 行 = (顧客 × タグ)。customer_id で顧客に紐づく。"
+    columns:
+      - name: customer_id
+        tests: [not_null]
+      - name: tag
+        tests: [not_null]
+
   - name: stg_shopify__products
     description: "商品マスタ。1 行 = 1 商品。標準タクソノミ category を含む。"
     columns:
@@ -59,12 +67,20 @@ models:
         tests: [unique, not_null]
 
   - name: stg_shopify__product_variants
-    description: "商品バリアント。1 行 = 1 バリアント。原価 unit_cost を含む。"
+    description: "商品バリアント。1 行 = 1 バリアント。原価 unit_cost・sku・barcode(JAN) を含む。"
     columns:
       - name: variant_id
         tests: [unique, not_null]
       - name: product_id
         description: "親商品 ID。"
+        tests: [not_null]
+
+  - name: stg_shopify__product_tags
+    description: "商品タグ (long)。1 行 = (商品 × タグ)。product_id で商品に紐づく。"
+    columns:
+      - name: product_id
+        tests: [not_null]
+      - name: tag
         tests: [not_null]
 
   - name: stg_shopify__collections

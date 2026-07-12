@@ -22,10 +22,14 @@ sources:
         description: "注文の決済取引 (orders の inline list 子)。_dlt_parent_id が orders._dlt_id を参照。"
       - name: products
         description: "商品ヘッダ (Bulk)。category / options を含む。"
+      - name: products__tags
+        description: "商品タグ (products の inline scalar list 子。value 列)。_dlt_parent_id が products._dlt_id を参照。"
       - name: product_variants
-        description: "商品バリアント (Bulk)。原価 inventory_item__unit_cost を含む。parent_id が products.id を参照。"
+        description: "商品バリアント (Bulk)。原価 inventory_item__unit_cost を含む。sku / barcode(JAN 等) を含む。parent_id が products.id を参照。"
       - name: customers
         description: "顧客 (Bulk)。default_email_address にメール配信同意を含む。"
+      - name: customers__tags
+        description: "顧客タグ (customers の inline scalar list 子。value 列)。_dlt_parent_id が customers._dlt_id を参照。"
       - name: customer_addresses
         description: "顧客の住所 (Bulk・addressesV2)。parent_id が customers.id を参照。"
       - name: collections

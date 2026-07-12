@@ -12,6 +12,7 @@ select
     email_marketing_state,
     customer_state,
     customer_segment,
+    tags,
     tax_exempt,
     customer_locale,
     lifetime_duration,

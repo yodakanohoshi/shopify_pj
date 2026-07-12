@@ -14,8 +14,17 @@ variant_agg as (
         min(price)              as min_price,
         max(price)              as max_price,
         avg(unit_cost)          as avg_unit_cost,
-        sum(inventory_quantity) as total_inventory_qty
+        sum(inventory_quantity) as total_inventory_qty,
+        -- 商品配下バリアントの SKU / JAN (barcode) を一覧化
+        string_agg(distinct sku, ', ')     as sku_list,
+        string_agg(distinct barcode, ', ') as jan_list
     from {{ ref('stg_shopify__product_variants') }}
+    group by 1
+),
+
+tag_agg as (
+    select product_id, string_agg(tag, ', ' order by tag) as tags
+    from {{ ref('stg_shopify__product_tags') }}
     group by 1
 )
 
@@ -43,7 +52,11 @@ select
         then round((va.min_price - va.avg_unit_cost) / va.min_price, 4)
     end                             as est_margin_rate,
     coalesce(va.total_inventory_qty, p.total_inventory) as total_inventory,
+    va.sku_list,
+    va.jan_list,
+    ta.tags,
     p.created_at,
     p.published_at
 from products p
 left join variant_agg va on p.product_id = va.product_id
+left join tag_agg ta on p.product_id = ta.product_id

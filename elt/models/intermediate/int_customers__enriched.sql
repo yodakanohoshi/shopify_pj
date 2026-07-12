@@ -25,6 +25,12 @@ address_agg as (
     select customer_id, count(*) as address_count
     from {{ ref('stg_shopify__customer_addresses') }}
     group by 1
+),
+
+tag_agg as (
+    select customer_id, string_agg(tag, ', ' order by tag) as tags
+    from {{ ref('stg_shopify__customer_tags') }}
+    group by 1
 )
 
 select
@@ -51,6 +57,7 @@ select
     os.first_order_date,
     os.latest_order_date,
     coalesce(aa.address_count, 0)       as address_count,
+    ta.tags,
     -- 簡易セグメント
     case
         when coalesce(os.orders_count, 0) = 0 then 'prospect'
@@ -63,3 +70,4 @@ select
 from customers c
 left join order_stats os on c.customer_id = os.customer_id
 left join address_agg aa on c.customer_id = aa.customer_id
+left join tag_agg ta on c.customer_id = ta.customer_id
