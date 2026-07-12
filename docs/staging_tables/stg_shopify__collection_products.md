@@ -3,7 +3,7 @@
 コレクション所属商品のブリッジ。元: `raw.collection_products`。
 粒度: 1 行 = (コレクション × 商品)。
 
-| カラム | 型 | 説明 |
-|---|---|---|
-| collection_id | varchar | コレクション ID。**FK → stg_shopify__collections** |
-| product_id | varchar | 商品 ID。**FK → stg_shopify__products** |
+| 日本語名 | 論理名 | 型 | 説明 |
+|---|---|---|---|
+| コレクションID | collection_id | varchar | コレクション ID。**FK → stg_shopify__collections** |
+| 商品ID | product_id | varchar | 商品 ID。**FK → stg_shopify__products** |
