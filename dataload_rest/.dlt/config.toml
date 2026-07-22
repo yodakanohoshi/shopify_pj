@@ -1,0 +1,12 @@
+# dlt の非機密設定。機密情報 (トークン / Secret) は secrets.toml か環境変数へ。
+[runtime]
+log_level = "INFO"
+
+[sources.rest_api]
+# API のベース URL (末尾スラッシュは有無どちらでも可)
+base_url = "https://api.example.com/v1"
+# Client Credentials Grant のトークンエンドポイント。
+# 未設定なら "<base_url>/oauth/token" を使う。
+token_url = "https://api.example.com/oauth/token"
+# 1ページあたりの取得件数 (API の上限に合わせる)
+page_size = 100
