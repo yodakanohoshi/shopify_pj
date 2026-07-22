@@ -1,0 +1,23 @@
+[project]
+name = "rest-dataload"
+version = "0.1.0"
+description = "ページングのある REST API → raw ロード (dlt / DuckDB)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "dlt[duckdb]>=1.6.0",
+    "requests>=2.32",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.uv]
+package = false
